@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth (Auth.js / NextAuth v5 + Prisma Adapter)
+//
+// User adalah akun login. Outlet adalah tenant (klinik/salon). Owner yang
+// register lewat /register otomatis dapat Outlet + User (role "owner") yang
+// saling terhubung lewat outletId. Login staff individual (role "staff")
+// menyusul di fase berikutnya kalau dibutuhkan — untuk sekarang cukup satu
+// akun owner per outlet.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // hash bcrypt; null kalau nanti nambah OAuth provider
+  role          String    @default("owner") // owner, staff — role bisnis, beda dari role NextAuth
+
+  outletId String?
+  outlet   Outlet? @relation(fields: [outletId], references: [id])
+
+  accounts Account[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+
+  @@index([outletId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Domain inti — sesuai draft schema, multi-tenant lewat outletId di tiap
+// tabel utama supaya satu database bisa melayani banyak klinik/salon.
+// ---------------------------------------------------------------------------
+
+model Outlet {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique // dipakai di /booking/[slug]
+  ownerName   String
+  ownerEmail  String    @unique
+  ownerPhone  String
+  planStatus  String    @default("trial") // trial, active, past_due, cancelled
+  planName    String    @default("free") // free, pro
+  trialEndsAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  users         User[]
+  staff         Staff[]
+  customers     Customer[]
+  services      Service[]
+  bookings      Booking[]
+  subscriptions Subscription[]
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  outletId  String
+  outlet    Outlet   @relation(fields: [outletId], references: [id])
+  name      String
+  email     String
+  role      String   @default("staff") // owner, admin, staff
+  phone     String?
+  createdAt DateTime @default(now())
+
+  bookings Booking[]
+
+  @@index([outletId])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  outletId  String
+  outlet    Outlet   @relation(fields: [outletId], references: [id])
+  name      String
+  phone     String
+  notes     String? // alergi, preferensi, catatan treatment
+  createdAt DateTime @default(now())
+
+  bookings         Booking[]
+  customerPackages CustomerPackage[]
+
+  @@index([outletId])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  outletId    String
+  outlet      Outlet   @relation(fields: [outletId], references: [id])
+  name        String
+  durationMin Int
+  price       Int
+  createdAt   DateTime @default(now())
+
+  bookings Booking[]
+  packages Package[]
+
+  @@index([outletId])
+}
+
+model Package {
+  id            String @id @default(cuid())
+  outletId      String
+  serviceId     String
+  service       Service @relation(fields: [serviceId], references: [id])
+  name          String // contoh: "Paket 5x Facial"
+  totalSessions Int
+  price         Int
+
+  customerPackages CustomerPackage[]
+
+  @@index([outletId])
+  @@index([serviceId])
+}
+
+model CustomerPackage {
+  id           String    @id @default(cuid())
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id])
+  packageId    String
+  package      Package   @relation(fields: [packageId], references: [id])
+  usedSessions Int       @default(0)
+  purchasedAt  DateTime  @default(now())
+  expiresAt    DateTime?
+
+  @@index([customerId])
+  @@index([packageId])
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  outletId   String
+  outlet     Outlet   @relation(fields: [outletId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  staffId    String?
+  staff      Staff?   @relation(fields: [staffId], references: [id])
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id])
+  startTime  DateTime
+  endTime    DateTime
+  status     String   @default("pending") // pending, confirmed, completed, cancelled, no_show
+  createdAt  DateTime @default(now())
+
+  transactions  Transaction[]
+  notifications NotificationLog[]
+
+  @@index([outletId])
+  @@index([staffId, startTime])
+}
+
+model Transaction {
+  id        String    @id @default(cuid())
+  bookingId String
+  booking   Booking   @relation(fields: [bookingId], references: [id])
+  amount    Int
+  method    String // cash, qris, transfer
+  status    String    @default("unpaid") // unpaid, paid
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([bookingId])
+}
+
+model Subscription {
+  id              String    @id @default(cuid())
+  outletId        String
+  outlet          Outlet    @relation(fields: [outletId], references: [id])
+  planName        String // free, pro
+  status          String // active, past_due, cancelled
+  gatewayRef      String? // reference id dari Midtrans/Xendit
+  nextBillingDate DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([outletId])
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  type      String // reminder_h1, confirmation, follow_up
+  status    String // sent, failed
+  sentAt    DateTime @default(now())
+
+  @@index([bookingId])
+}

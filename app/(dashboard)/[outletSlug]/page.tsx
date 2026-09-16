@@ -1,0 +1,119 @@
+import { prisma } from "@/lib/prisma";
+import { getSiteUrl } from "@/lib/site-url";
+import { BookingLinkCard } from "@/components/booking-link-card";
+
+function formatRupiah(value: number) {
+  return `Rp${value.toLocaleString("id-ID")}`;
+}
+
+export default async function DashboardOverviewPage({
+  params,
+}: {
+  params: Promise<{ outletSlug: string }>;
+}) {
+  const { outletSlug } = await params;
+
+  const outlet = await prisma.outlet.findUnique({
+    where: { slug: outletSlug },
+    select: { id: true, trialEndsAt: true },
+  });
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(startOfToday);
+  endOfToday.setDate(endOfToday.getDate() + 1);
+
+  const startOfMonth = new Date(startOfToday);
+  startOfMonth.setDate(1);
+  const startOfNextMonth = new Date(startOfMonth);
+  startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
+
+  let bookingsToday = 0;
+  let bookingsThisMonth = 0;
+  let revenueThisMonth = 0;
+
+  if (outlet) {
+    const [todayCount, monthCount, paidThisMonth] = await Promise.all([
+      prisma.booking.count({
+        where: {
+          outletId: outlet.id,
+          startTime: { gte: startOfToday, lt: endOfToday },
+        },
+      }),
+      prisma.booking.count({
+        where: {
+          outletId: outlet.id,
+          startTime: { gte: startOfMonth, lt: startOfNextMonth },
+        },
+      }),
+      // Mulai Fase 3, "pendapatan" dihitung dari Transaction yang beneran
+      // dicatat lewat menu Kasir (status "paid"), bukan lagi estimasi dari
+      // harga layanan booking "completed". Belum termasuk penjualan paket
+      // (lihat catatan di app/api/reports/monthly).
+      prisma.transaction.findMany({
+        where: {
+          status: "paid",
+          paidAt: { gte: startOfMonth, lt: startOfNextMonth },
+          booking: { outletId: outlet.id },
+        },
+        select: { amount: true },
+      }),
+    ]);
+
+    bookingsToday = todayCount;
+    bookingsThisMonth = monthCount;
+    revenueThisMonth = paidThisMonth.reduce((sum, tx) => sum + tx.amount, 0);
+  }
+
+  const siteUrl = await getSiteUrl();
+  const bookingUrl = `${siteUrl}/booking/${outletSlug}`;
+
+  return (
+    <div>
+      <h1 className="text-xl font-semibold text-neutral-900">Overview</h1>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-neutral-200 p-5">
+          <p className="text-sm text-neutral-500">Booking hari ini</p>
+          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+            {bookingsToday}
+          </p>
+        </div>
+        <div className="rounded-lg border border-neutral-200 p-5">
+          <p className="text-sm text-neutral-500">Booking bulan ini</p>
+          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+            {bookingsThisMonth}
+          </p>
+        </div>
+        <div className="rounded-lg border border-neutral-200 p-5">
+          <p className="text-sm text-neutral-500">Pendapatan bulan ini</p>
+          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+            {formatRupiah(revenueThisMonth)}
+          </p>
+          <p className="mt-1 text-xs text-neutral-400">
+            Dari pembayaran yang dicatat di menu Kasir
+          </p>
+        </div>
+        <div className="rounded-lg border border-neutral-200 p-5">
+          <p className="text-sm text-neutral-500">Trial berakhir</p>
+          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+            {outlet?.trialEndsAt
+              ? new Date(outlet.trialEndsAt).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                })
+              : "—"}
+          </p>
+        </div>
+      </div>
+
+      <BookingLinkCard bookingUrl={bookingUrl} />
+
+      <p className="mt-8 text-sm text-neutral-500">
+        Atur layanan, staff, dan pelanggan lewat menu di kiri, bikin booking
+        manual dari menu Booking, jual paket lewat menu Paket, dan catat
+        pembayaran lewat menu Kasir.
+      </p>
+    </div>
+  );
+}
