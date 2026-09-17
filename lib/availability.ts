@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CLOSING_HOUR, OPENING_HOUR, SLOT_STEP_MIN } from "@/lib/business-hours";
+import { endOfJakartaDay, startOfJakartaDay } from "@/lib/tz";
 
 // Status booking yang dianggap "masih pakai slot" — cancelled & no_show
 // nggak lagi ngeblok jam yang sama, sama kayak clash check admin di
@@ -17,13 +18,11 @@ function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
   return aStart < bEnd && aEnd > bStart;
 }
 
-// Rentang satu hari kalender (00:00–24:00) buat tanggal yang dikasih,
-// dipakai buat query booking existing di hari itu.
+// Rentang satu hari kalender (00:00–24:00 WIB) buat tanggal yang dikasih,
+// dipakai buat query booking existing di hari itu. Eksplisit WIB (bukan
+// timezone server) — lihat lib/tz.ts buat alasannya.
 export function dayRange(dateStr: string) {
-  const start = new Date(`${dateStr}T00:00:00`);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { start, end };
+  return { start: startOfJakartaDay(dateStr), end: endOfJakartaDay(dateStr) };
 }
 
 // Ambil semua booking outlet di hari itu yang masih "aktif" (belum
@@ -59,9 +58,10 @@ export function generateCandidateSlots(dateStr: string, durationMin: number) {
     minutes + durationMin <= closeMinutes;
     minutes += SLOT_STEP_MIN
   ) {
-    const slotStart = new Date(dayStart);
-    slotStart.setMinutes(minutes);
-    slots.push(slotStart);
+    // Tambah milidetik langsung ke instant dayStart (bukan .setMinutes(),
+    // yang baca/tulis wall-clock lokal server) — biar hasilnya konsisten
+    // di mana pun kode ini jalan.
+    slots.push(new Date(dayStart.getTime() + minutes * 60_000));
   }
 
   return slots;

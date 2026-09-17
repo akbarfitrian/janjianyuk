@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSiteUrl } from "@/lib/site-url";
 import { BookingLinkCard } from "@/components/booking-link-card";
+import {
+  endOfJakartaMonth,
+  jakartaDateStringNow,
+  jakartaYearMonthNow,
+  startOfJakartaDay,
+  startOfJakartaMonth,
+} from "@/lib/tz";
 
 function formatRupiah(value: number) {
   return `Rp${value.toLocaleString("id-ID")}`;
@@ -18,15 +25,12 @@ export default async function DashboardOverviewPage({
     select: { id: true, trialEndsAt: true },
   });
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const endOfToday = new Date(startOfToday);
-  endOfToday.setDate(endOfToday.getDate() + 1);
+  const { year, month } = jakartaYearMonthNow();
+  const startOfToday = startOfJakartaDay(jakartaDateStringNow());
+  const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
 
-  const startOfMonth = new Date(startOfToday);
-  startOfMonth.setDate(1);
-  const startOfNextMonth = new Date(startOfMonth);
-  startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
+  const startOfMonth = startOfJakartaMonth(year, month);
+  const startOfNextMonth = endOfJakartaMonth(year, month);
 
   let bookingsToday = 0;
   let bookingsThisMonth = 0;
@@ -101,6 +105,7 @@ export default async function DashboardOverviewPage({
               ? new Date(outlet.trialEndsAt).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "short",
+                  timeZone: "Asia/Jakarta",
                 })
               : "—"}
           </p>

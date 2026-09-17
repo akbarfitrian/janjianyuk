@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { requireOutletSession } from "@/lib/api-session";
+import { endOfJakartaDay, startOfJakartaDay } from "@/lib/tz";
 
 const transactionInclude = {
   booking: {
@@ -25,13 +26,11 @@ export async function GET(request: Request) {
 
   let createdAtFilter: { gte: Date; lt: Date } | undefined;
   if (dateParam) {
-    const start = new Date(`${dateParam}T00:00:00`);
+    const start = startOfJakartaDay(dateParam);
     if (Number.isNaN(start.getTime())) {
       return NextResponse.json({ error: "Tanggal tidak valid." }, { status: 400 });
     }
-    const end = new Date(start);
-    end.setDate(end.getDate() + 1);
-    createdAtFilter = { gte: start, lt: end };
+    createdAtFilter = { gte: start, lt: endOfJakartaDay(dateParam) };
   }
 
   const transactions = await prisma.transaction.findMany({

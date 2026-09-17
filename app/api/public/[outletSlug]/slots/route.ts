@@ -8,6 +8,7 @@ import {
   isOutletFree,
   isStaffFree,
 } from "@/lib/availability";
+import { startOfJakartaDay } from "@/lib/tz";
 
 // Endpoint publik (tanpa session) dipanggil dari halaman booking
 // /booking/[outletSlug] buat nampilin jam kosong hari itu. Cuma balikin
@@ -29,7 +30,7 @@ export async function GET(
       { status: 400 },
     );
   }
-  if (Number.isNaN(new Date(`${date}T00:00:00`).getTime())) {
+  if (Number.isNaN(startOfJakartaDay(date).getTime())) {
     return NextResponse.json({ error: "Tanggal tidak valid." }, { status: 400 });
   }
 

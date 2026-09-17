@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { requireOutletSession } from "@/lib/api-session";
+import {
+  endOfJakartaMonth,
+  jakartaYearMonthNow,
+  startOfJakartaMonth,
+  toJakartaDateString,
+} from "@/lib/tz";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -20,17 +26,19 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const monthParam = searchParams.get("month"); // format YYYY-MM
 
-  const now = new Date();
   const [year, month] = monthParam
     ? monthParam.split("-").map(Number)
-    : [now.getFullYear(), now.getMonth() + 1];
+    : (() => {
+        const { year: y, month: m } = jakartaYearMonthNow();
+        return [y, m];
+      })();
 
   if (!year || !month || month < 1 || month > 12) {
     return NextResponse.json({ error: "Bulan tidak valid." }, { status: 400 });
   }
 
-  const monthStart = new Date(year, month - 1, 1);
-  const monthEnd = new Date(year, month, 1);
+  const monthStart = startOfJakartaMonth(year, month);
+  const monthEnd = endOfJakartaMonth(year, month);
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -44,7 +52,7 @@ export async function GET(request: Request) {
   const dayTotals = new Map<string, { total: number; count: number }>();
   for (const tx of transactions) {
     if (!tx.paidAt) continue;
-    const key = `${tx.paidAt.getFullYear()}-${pad(tx.paidAt.getMonth() + 1)}-${pad(tx.paidAt.getDate())}`;
+    const key = toJakartaDateString(tx.paidAt);
     const current = dayTotals.get(key) ?? { total: 0, count: 0 };
     current.total += tx.amount;
     current.count += 1;

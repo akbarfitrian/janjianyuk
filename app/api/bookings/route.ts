@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOutletSession } from "@/lib/api-session";
 import { sendBookingConfirmation } from "@/lib/notifications";
+import { endOfJakartaDay, jakartaDateStringNow, startOfJakartaDay } from "@/lib/tz";
 
 const bookingInclude = {
   customer: { select: { id: true, name: true, phone: true } },
@@ -18,15 +19,12 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dateParam = searchParams.get("date"); // format YYYY-MM-DD
 
-  const day = dateParam ? new Date(`${dateParam}T00:00:00`) : new Date();
-  if (Number.isNaN(day.getTime())) {
+  const dateStr = dateParam ?? jakartaDateStringNow();
+  const start = startOfJakartaDay(dateStr);
+  if (Number.isNaN(start.getTime())) {
     return NextResponse.json({ error: "Tanggal tidak valid." }, { status: 400 });
   }
-
-  const start = new Date(day);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  const end = endOfJakartaDay(dateStr);
 
   const bookings = await prisma.booking.findMany({
     where: {
