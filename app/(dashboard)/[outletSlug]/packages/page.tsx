@@ -314,7 +314,7 @@ export default function PackagesPage() {
       </form>
       {packageError && <p className="mt-2 text-sm text-red-600">{packageError}</p>}
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 text-left text-neutral-500">
             <tr>
@@ -451,7 +451,7 @@ export default function PackagesPage() {
         catat juga pembayarannya lewat menu Kasir biar kehitung.
       </p>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 text-left text-neutral-500">
             <tr>

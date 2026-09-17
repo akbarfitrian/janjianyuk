@@ -107,7 +107,7 @@ export function CustomersManager({
 
       {formError && <p className="text-sm text-red-600">{formError}</p>}
 
-      <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="overflow-x-auto rounded-lg border border-neutral-200">
         <table className="w-full text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>

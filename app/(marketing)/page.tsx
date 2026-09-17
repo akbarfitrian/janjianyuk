@@ -1,8 +1,22 @@
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export default function MarketingHomePage() {
   return (
-    <main className="flex-1">
+    <>
+      <header className="border-b border-neutral-200">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+          <Logo />
+          <Link
+            href="/login"
+            className="text-sm font-medium text-neutral-900 underline underline-offset-4"
+          >
+            Masuk
+          </Link>
+        </div>
+      </header>
+
+      <main className="flex-1">
       <section className="mx-auto max-w-3xl px-6 py-24 sm:py-32">
         <h1 className="text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl">
           Booking klinik & salon, bukan lewat chat yang kebanjiran.
@@ -61,6 +75,7 @@ export default function MarketingHomePage() {
           </dl>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

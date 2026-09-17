@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { LogoMarkStacked } from "@/components/logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -62,6 +63,9 @@ export default function RegisterPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-24">
       <div className="w-full max-w-sm">
+        <Link href="/" className="mb-8 flex justify-center">
+          <LogoMarkStacked className="h-20 w-auto" />
+        </Link>
         <h1 className="text-2xl font-semibold text-neutral-900">
           Daftarkan outlet
         </h1>

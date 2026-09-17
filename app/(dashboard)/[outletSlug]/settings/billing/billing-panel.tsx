@@ -155,7 +155,8 @@ export function BillingPanel({
         {subscriptions.length === 0 ? (
           <p className="mt-2 text-sm text-neutral-500">Belum ada riwayat pembayaran.</p>
         ) : (
-          <table className="mt-3 w-full text-left text-sm">
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-neutral-200 text-neutral-500">
                 <th className="pb-2 font-medium">Tanggal</th>
@@ -174,7 +175,8 @@ export function BillingPanel({
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>
