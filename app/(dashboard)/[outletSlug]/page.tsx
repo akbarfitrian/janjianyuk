@@ -74,33 +74,33 @@ export default async function DashboardOverviewPage({
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900">Overview</h1>
+      <h1 className="text-xl font-semibold text-ink">Overview</h1>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-neutral-200 p-5">
-          <p className="text-sm text-neutral-500">Booking hari ini</p>
-          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+        <div className="rounded-lg border border-line p-5">
+          <p className="text-sm text-ink-subtle">Booking hari ini</p>
+          <p className="mt-2 text-3xl font-semibold text-ink">
             {bookingsToday}
           </p>
         </div>
-        <div className="rounded-lg border border-neutral-200 p-5">
-          <p className="text-sm text-neutral-500">Booking bulan ini</p>
-          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+        <div className="rounded-lg border border-line p-5">
+          <p className="text-sm text-ink-subtle">Booking bulan ini</p>
+          <p className="mt-2 text-3xl font-semibold text-ink">
             {bookingsThisMonth}
           </p>
         </div>
-        <div className="rounded-lg border border-neutral-200 p-5">
-          <p className="text-sm text-neutral-500">Pendapatan bulan ini</p>
-          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+        <div className="rounded-lg border border-line p-5">
+          <p className="text-sm text-ink-subtle">Pendapatan bulan ini</p>
+          <p className="mt-2 text-3xl font-semibold text-ink">
             {formatRupiah(revenueThisMonth)}
           </p>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-ink-faint">
             Dari pembayaran yang dicatat di menu Kasir
           </p>
         </div>
-        <div className="rounded-lg border border-neutral-200 p-5">
-          <p className="text-sm text-neutral-500">Trial berakhir</p>
-          <p className="mt-2 text-3xl font-semibold text-neutral-900">
+        <div className="rounded-lg border border-line p-5">
+          <p className="text-sm text-ink-subtle">Trial berakhir</p>
+          <p className="mt-2 text-3xl font-semibold text-ink">
             {outlet?.trialEndsAt
               ? new Date(outlet.trialEndsAt).toLocaleDateString("id-ID", {
                   day: "numeric",
@@ -114,7 +114,7 @@ export default async function DashboardOverviewPage({
 
       <BookingLinkCard bookingUrl={bookingUrl} />
 
-      <p className="mt-8 text-sm text-neutral-500">
+      <p className="mt-8 text-sm text-ink-subtle">
         Atur layanan, staff, dan pelanggan lewat menu di kiri, bikin booking
         manual dari menu Booking, jual paket lewat menu Paket, dan catat
         pembayaran lewat menu Kasir.

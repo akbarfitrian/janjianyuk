@@ -1,6 +1,119 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Tema: Obsidian — Emerald Blue
+   --------------------------------------------------------------------------
+   Semua warna UI di app ini ngambil dari token di bawah. Jangan pakai warna
+   mentah (neutral-900, white, hex) langsung di komponen — tambahin token baru
+   di sini kalau butuh warna baru, biar tema bisa diganti dari satu tempat.
+
+   Skala:
+   - canvas / surface / surface-2  → latar, dari paling gelap ke paling terang
+   - line / line-strong            → garis pemisah & border input
+   - ink / ink-muted / ink-subtle / ink-faint → teks, dari paling kontras
+   - accent (emerald)              → aksi utama: tombol primary, focus state
+   - azure (blue)                  → aksen sekunder & info
+   - danger / warn / ok / info     → status
+   ========================================================================== */
+
+@theme {
+  /* Latar */
+  --color-canvas: #060a0f;
+  --color-surface: #0c131b;
+  --color-surface-2: #131e29;
+
+  /* Garis */
+  --color-line: #1b2937;
+  --color-line-strong: #294056;
+
+  /* Teks */
+  --color-ink: #e9f1f7;
+  --color-ink-muted: #a9bccd;
+  --color-ink-subtle: #7c92a6;
+  --color-ink-faint: #5b7183;
+
+  /* Aksi utama — emerald */
+  --color-accent: #10b981;
+  --color-accent-hover: #34d399;
+  --color-accent-soft: #0b2f26;
+  --color-accent-line: #12543f;
+  --color-on-accent: #04140f;
+
+  /* Aksen sekunder — blue */
+  --color-azure: #38bdf8;
+  --color-azure-hover: #7dd3fc;
+  --color-azure-soft: #0b2434;
+  --color-azure-line: #1b4763;
+
+  /* Status */
+  --color-danger: #f87171;
+  --color-danger-strong: #fca5a5;
+  --color-danger-soft: #2a1416;
+  --color-danger-line: #4c2226;
+
+  --color-warn: #fbbf24;
+  --color-warn-soft: #2b2110;
+  --color-warn-line: #4c3a12;
+
+  --color-ok: #34d399;
+  --color-ok-soft: #0c2a22;
+  --color-ok-line: #17513e;
+
+  --color-info: #7dd3fc;
+  --color-info-soft: #0b2434;
+  --color-info-line: #1b4763;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
+}
+
+@layer base {
+  /* Bikin kontrol native (date picker, select, scrollbar, autofill) ikut
+     gelap — tanpa ini date/time input di booking form nongol putih. */
+  html {
+    color-scheme: dark;
+  }
+
+  /* Teks di atas latar gelap gampang nge-blur/nge-bold kalau nggak di-tune —
+     dua baris ini yang bikin body text kelihatan tajam kayak di screenshot
+     desain, bukan buram kayak render default browser. */
+  body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Fraunces sekarang variable (lihat layout.tsx) — auto ini yang nyalain
+     sumbu optical-size-nya, biar headline gede otomatis kepake bentuk
+     display yang lebih berkarakter tanpa perlu diatur manual per elemen. */
+  .font-serif {
+    font-optical-sizing: auto;
+  }
+
+  /* Input di app ini kebanyakan cuma punya border tanpa bg, jadi bg-nya
+     diset di sini sekali buat semua ketimbang nempel di tiap className. */
+  input,
+  select,
+  textarea {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  /* Popup <option> ngerender di luar CSS-nya <select>, jadi diwarnain sendiri. */
+  option {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
 }

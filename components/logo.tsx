@@ -53,7 +53,7 @@ export function Logo({
       aria-label="Janjianyuk"
     >
       <LogoMark className="h-8 w-8" />
-      <span className="text-lg font-semibold tracking-tight text-neutral-900">
+      <span className="text-lg font-semibold tracking-tight text-ink">
         janjianyuk
       </span>
     </Link>

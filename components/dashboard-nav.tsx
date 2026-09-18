@@ -168,10 +168,10 @@ function OutletBrand({
     <div className="flex items-center gap-2">
       <LogoMark className="h-6 w-6 shrink-0" />
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-neutral-900">
+        <p className="truncate text-sm font-semibold text-ink">
           {outletName}
         </p>
-        <p className="truncate text-xs text-neutral-500">
+        <p className="truncate text-xs text-ink-subtle">
           Paket {planName} · {planStatus}
         </p>
       </div>
@@ -188,7 +188,7 @@ function NavLinks({ outletSlug }: { outletSlug: string }) {
           <Link
             key={item.href}
             href={`/${outletSlug}${item.href}`}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
           >
             <Icon className="h-4 w-4 shrink-0" />
             {item.label}
@@ -228,8 +228,8 @@ function UserMenu({
   return (
     <div ref={containerRef} className="relative">
       {open && (
-        <div className="absolute bottom-full left-0 mb-2 w-full rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-          <p className="truncate text-xs text-neutral-500">{userEmail}</p>
+        <div className="absolute bottom-full left-0 mb-2 w-full rounded-lg border border-line bg-surface p-3 shadow-lg">
+          <p className="truncate text-xs text-ink-subtle">{userEmail}</p>
           <button
             type="button"
             disabled={loggingOut}
@@ -237,7 +237,7 @@ function UserMenu({
               setLoggingOut(true);
               signOut({ callbackUrl: "/login" });
             }}
-            className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
+            className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-danger hover:bg-danger-soft disabled:opacity-60"
           >
             <LogoutIcon className="h-4 w-4" />
             {loggingOut ? "Keluar…" : "Keluar"}
@@ -249,15 +249,15 @@ function UserMenu({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-neutral-100"
+        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-surface-2"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-sm font-semibold text-white">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent">
           {initial}
         </span>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-900">
+        <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
           {displayName}
         </span>
-        <MoreIcon className="h-4 w-4 shrink-0 text-neutral-400" />
+        <MoreIcon className="h-4 w-4 shrink-0 text-ink-faint" />
       </button>
     </div>
   );
@@ -299,18 +299,18 @@ export function DashboardNav({
   return (
     <>
       {/* Topbar mobile */}
-      <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 md:hidden">
+      <div className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 md:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Buka menu"
-          className="-ml-2 rounded-md p-2 text-neutral-700 hover:bg-neutral-100"
+          className="-ml-2 rounded-md p-2 text-ink-muted hover:bg-surface-2"
         >
           <MenuIcon />
         </button>
         <Link href={`/${outletSlug}`} className="flex min-w-0 items-center gap-2">
           <LogoMark className="h-6 w-6 shrink-0" />
-          <span className="truncate text-sm font-semibold text-neutral-900">
+          <span className="truncate text-sm font-semibold text-ink">
             {outletName}
           </span>
         </Link>
@@ -318,12 +318,12 @@ export function DashboardNav({
       </div>
 
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex md:w-56 md:shrink-0 md:flex-col md:border-r md:border-neutral-200 md:px-4 md:py-6">
+      <aside className="hidden md:flex md:w-56 md:shrink-0 md:flex-col md:border-r md:border-line md:bg-surface md:px-4 md:py-6">
         <OutletBrand outletName={outletName} planName={planName} planStatus={planStatus} />
         <nav className="mt-6 flex flex-col gap-1">
           <NavLinks outletSlug={outletSlug} />
         </nav>
-        <div className="mt-auto border-t border-neutral-200 pt-4">
+        <div className="mt-auto border-t border-line pt-4">
           <UserMenu userName={userName} userEmail={userEmail} />
         </div>
       </aside>
@@ -333,7 +333,7 @@ export function DashboardNav({
         <div
           onClick={() => setOpen(false)}
           aria-hidden="true"
-          className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${
+          className={`absolute inset-0 bg-canvas/70 transition-opacity duration-200 ${
             open ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -341,7 +341,7 @@ export function DashboardNav({
           role="dialog"
           aria-modal="true"
           aria-label="Menu navigasi"
-          className={`absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col bg-white px-4 py-6 shadow-xl transition-transform duration-200 ease-out ${
+          className={`absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col bg-surface px-4 py-6 shadow-xl transition-transform duration-200 ease-out ${
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -351,7 +351,7 @@ export function DashboardNav({
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Tutup menu"
-              className="shrink-0 rounded-md p-2 text-neutral-500 hover:bg-neutral-100"
+              className="shrink-0 rounded-md p-2 text-ink-subtle hover:bg-surface-2"
             >
               <CloseIcon />
             </button>
@@ -361,7 +361,7 @@ export function DashboardNav({
             <NavLinks outletSlug={outletSlug} />
           </nav>
 
-          <div className="mt-auto border-t border-neutral-200 pt-4">
+          <div className="mt-auto border-t border-line pt-4">
             <UserMenu userName={userName} userEmail={userEmail} />
           </div>
         </div>

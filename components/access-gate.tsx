@@ -30,12 +30,12 @@ export function AccessGate({
 
   if (locked && !isBillingPage) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
-        <p className="text-sm font-medium text-red-900">Akses dikunci</p>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-red-700">{reason}</p>
+      <div className="rounded-lg border border-danger-line bg-danger-soft p-8 text-center">
+        <p className="text-sm font-medium text-danger-strong">Akses dikunci</p>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-danger">{reason}</p>
         <Link
           href={`/${outletSlug}/settings/billing`}
-          className="mt-4 inline-block rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+          className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover"
         >
           Buka halaman Billing
         </Link>

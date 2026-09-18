@@ -89,28 +89,28 @@ export default function StaffPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900">Staff</h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <h1 className="text-xl font-semibold text-ink">Staff</h1>
+      <p className="mt-1 text-sm text-ink-subtle">
         Data staff outlet kamu, dipakai buat assign booking per staff.
       </p>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-4"
+        className="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-line p-4"
       >
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Nama
           </label>
           <input
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="flex-1 min-w-[180px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Email
           </label>
           <input
@@ -118,27 +118,27 @@ export default function StaffPage() {
             type="email"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="w-40">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             No. HP
           </label>
           <input
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="w-32">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Role
           </label>
           <select
             value={form.role}
             onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           >
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
@@ -148,7 +148,7 @@ export default function StaffPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
           >
             {editingId ? "Simpan" : "Tambah"}
           </button>
@@ -156,18 +156,18 @@ export default function StaffPage() {
             <button
               type="button"
               onClick={cancelEdit}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              className="rounded-md border border-line-strong px-4 py-2 text-sm font-medium text-ink-muted hover:bg-surface-2"
             >
               Batal
             </button>
           )}
         </div>
       </form>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-neutral-500">
+          <thead className="bg-surface-2 text-left text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Nama</th>
               <th className="px-4 py-2 font-medium">Email</th>
@@ -176,40 +176,40 @@ export default function StaffPage() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-line">
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-ink-faint">
                   Memuat...
                 </td>
               </tr>
             ) : staffList.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-ink-faint">
                   Belum ada staff. Tambahin dulu lewat form di atas.
                 </td>
               </tr>
             ) : (
               staffList.map((staff) => (
                 <tr key={staff.id}>
-                  <td className="px-4 py-3 text-neutral-900">{staff.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">{staff.email}</td>
-                  <td className="px-4 py-3 text-neutral-600">
+                  <td className="px-4 py-3 text-ink">{staff.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">{staff.email}</td>
+                  <td className="px-4 py-3 text-ink-muted">
                     {staff.phone ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-neutral-600 capitalize">
+                  <td className="px-4 py-3 text-ink-muted capitalize">
                     {staff.role}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => startEdit(staff)}
-                      className="mr-3 text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+                      className="mr-3 text-ink-muted underline underline-offset-4 hover:text-ink"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(staff.id)}
-                      className="text-red-600 underline underline-offset-4 hover:text-red-800"
+                      className="text-danger underline underline-offset-4 hover:text-danger"
                     >
                       Hapus
                     </button>

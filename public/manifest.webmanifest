@@ -4,8 +4,8 @@
   "description": "Booking online, kalender per staff, dan reminder WA otomatis buat klinik kecantikan, salon, dan barbershop.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#060a0f",
+  "theme_color": "#060a0f",
   "icons": [
     {
       "src": "/icon-192.png",

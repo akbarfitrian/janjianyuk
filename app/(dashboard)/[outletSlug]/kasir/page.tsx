@@ -223,22 +223,22 @@ function ReportDownloadMenu({
         disabled={!report}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex items-center gap-2 rounded-md border border-line-strong px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <DownloadIcon className="h-4 w-4" />
         Download
-        <ChevronDownIcon className="h-3.5 w-3.5 text-neutral-400" />
+        <ChevronDownIcon className="h-3.5 w-3.5 text-ink-faint" />
       </button>
 
       {open && report && (
-        <div className="absolute right-0 z-10 mt-2 w-44 rounded-lg border border-neutral-200 bg-white p-1 shadow-lg">
+        <div className="absolute right-0 z-10 mt-2 w-44 rounded-lg border border-line bg-surface p-1 shadow-lg">
           <button
             type="button"
             onClick={() => {
               downloadMonthlyReportCsv(month, report);
               setOpen(false);
             }}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink-muted hover:bg-surface-2"
           >
             Download CSV
           </button>
@@ -248,7 +248,7 @@ function ReportDownloadMenu({
               downloadMonthlyReportPdf(month, report);
               setOpen(false);
             }}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink-muted hover:bg-surface-2"
           >
             Download PDF
           </button>
@@ -357,8 +357,8 @@ export default function KasirPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900">Kasir</h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <h1 className="text-xl font-semibold text-ink">Kasir</h1>
+      <p className="mt-1 text-sm text-ink-subtle">
         Catat pembayaran booking di sini pas pelanggan bayar di tempat.
       </p>
 
@@ -367,19 +367,19 @@ export default function KasirPage() {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+          className="rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
         />
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-ink-subtle">
           Total masuk hari ini:{" "}
-          <span className="font-medium text-neutral-900">
+          <span className="font-medium text-ink">
             {formatRupiah(dayTotal)}
           </span>
         </p>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-neutral-500">
+          <thead className="bg-surface-2 text-left text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Jam</th>
               <th className="px-4 py-2 font-medium">Pelanggan</th>
@@ -389,16 +389,16 @@ export default function KasirPage() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-line">
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-ink-faint">
                   Memuat...
                 </td>
               </tr>
             ) : bookings.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-ink-faint">
                   Belum ada booking di tanggal ini.
                 </td>
               </tr>
@@ -409,25 +409,25 @@ export default function KasirPage() {
                 return (
                   <Fragment key={booking.id}>
                     <tr>
-                      <td className="px-4 py-3 text-neutral-900">
+                      <td className="px-4 py-3 text-ink">
                         {formatTime(booking.startTime)}
                       </td>
-                      <td className="px-4 py-3 text-neutral-900">
+                      <td className="px-4 py-3 text-ink">
                         {booking.customer.name}
                       </td>
-                      <td className="px-4 py-3 text-neutral-600">
+                      <td className="px-4 py-3 text-ink-muted">
                         {booking.service.name}
                       </td>
-                      <td className="px-4 py-3 text-neutral-600">
+                      <td className="px-4 py-3 text-ink-muted">
                         {formatRupiah(booking.service.price)}
                       </td>
                       <td className="px-4 py-3">
                         {isPaid ? (
-                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                          <span className="rounded-full bg-ok-soft px-2 py-1 text-xs font-medium text-ok">
                             Lunas · {formatRupiah(paid)}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                          <span className="rounded-full bg-warn-soft px-2 py-1 text-xs font-medium text-warn">
                             Belum bayar
                           </span>
                         )}
@@ -435,7 +435,7 @@ export default function KasirPage() {
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => openPayForm(booking)}
-                          className="text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+                          className="text-ink-muted underline underline-offset-4 hover:text-ink"
                         >
                           {isPaid ? "Catat lagi" : "Catat pembayaran"}
                         </button>
@@ -443,13 +443,13 @@ export default function KasirPage() {
                     </tr>
                     {payingBookingId === booking.id && (
                       <tr>
-                        <td colSpan={6} className="bg-neutral-50 px-4 py-4">
+                        <td colSpan={6} className="bg-surface-2 px-4 py-4">
                           <form
                             onSubmit={handlePaySubmit}
                             className="flex flex-wrap items-end gap-3"
                           >
                             <div className="w-40">
-                              <label className="block text-sm font-medium text-neutral-900">
+                              <label className="block text-sm font-medium text-ink">
                                 Jumlah (Rp)
                               </label>
                               <input
@@ -463,11 +463,11 @@ export default function KasirPage() {
                                     amount: e.target.value,
                                   }))
                                 }
-                                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                                className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
                               />
                             </div>
                             <div className="w-40">
-                              <label className="block text-sm font-medium text-neutral-900">
+                              <label className="block text-sm font-medium text-ink">
                                 Metode bayar
                               </label>
                               <select
@@ -478,7 +478,7 @@ export default function KasirPage() {
                                     method: e.target.value,
                                   }))
                                 }
-                                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                                className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
                               >
                                 {Object.entries(METHOD_LABEL).map(
                                   ([value, label]) => (
@@ -492,19 +492,19 @@ export default function KasirPage() {
                             <button
                               type="submit"
                               disabled={isSubmittingPay}
-                              className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+                              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
                             >
                               Simpan
                             </button>
                             <button
                               type="button"
                               onClick={closePayForm}
-                              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                              className="rounded-md border border-line-strong px-4 py-2 text-sm font-medium text-ink-muted hover:bg-surface-2"
                             >
                               Batal
                             </button>
                             {payError && (
-                              <p className="w-full text-sm text-red-600">
+                              <p className="w-full text-sm text-danger">
                                 {payError}
                               </p>
                             )}
@@ -522,7 +522,7 @@ export default function KasirPage() {
 
       {/* --- Laporan bulanan --- */}
       <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-neutral-900">
+        <h2 className="text-sm font-semibold text-ink">
           Laporan pendapatan bulanan
         </h2>
         <div className="flex items-center gap-2">
@@ -530,55 +530,55 @@ export default function KasirPage() {
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
           <ReportDownloadMenu month={month} report={report} />
         </div>
       </div>
 
       {isLoadingReport ? (
-        <p className="mt-3 text-sm text-neutral-400">Memuat laporan...</p>
+        <p className="mt-3 text-sm text-ink-faint">Memuat laporan...</p>
       ) : (
         <>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-neutral-200 p-5">
-              <p className="text-sm text-neutral-500">Total pendapatan bulan ini</p>
-              <p className="mt-2 text-2xl font-semibold text-neutral-900">
+            <div className="rounded-lg border border-line p-5">
+              <p className="text-sm text-ink-subtle">Total pendapatan bulan ini</p>
+              <p className="mt-2 text-2xl font-semibold text-ink">
                 {formatRupiah(report?.monthTotal ?? 0)}
               </p>
             </div>
-            <div className="rounded-lg border border-neutral-200 p-5">
-              <p className="text-sm text-neutral-500">Jumlah transaksi</p>
-              <p className="mt-2 text-2xl font-semibold text-neutral-900">
+            <div className="rounded-lg border border-line p-5">
+              <p className="text-sm text-ink-subtle">Jumlah transaksi</p>
+              <p className="mt-2 text-2xl font-semibold text-ink">
                 {report?.monthCount ?? 0}
               </p>
             </div>
           </div>
 
-          <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
+          <div className="mt-4 overflow-x-auto rounded-lg border border-line">
             <table className="w-full text-sm">
-              <thead className="bg-neutral-50 text-left text-neutral-500">
+              <thead className="bg-surface-2 text-left text-ink-subtle">
                 <tr>
                   <th className="px-4 py-2 font-medium">Tanggal</th>
                   <th className="px-4 py-2 font-medium">Transaksi</th>
                   <th className="px-4 py-2 font-medium">Pendapatan</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-line">
                 {!report || report.days.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={3} className="px-4 py-6 text-center text-ink-faint">
                       Belum ada transaksi lunas di bulan ini.
                     </td>
                   </tr>
                 ) : (
                   report.days.map((day) => (
                     <tr key={day.date}>
-                      <td className="px-4 py-3 text-neutral-900">
+                      <td className="px-4 py-3 text-ink">
                         {formatTanggalPendek(day.date)}
                       </td>
-                      <td className="px-4 py-3 text-neutral-600">{day.count}x</td>
-                      <td className="px-4 py-3 text-neutral-600">
+                      <td className="px-4 py-3 text-ink-muted">{day.count}x</td>
+                      <td className="px-4 py-3 text-ink-muted">
                         {formatRupiah(day.total)}
                       </td>
                     </tr>
@@ -590,7 +590,7 @@ export default function KasirPage() {
         </>
       )}
 
-      <p className="mt-3 text-xs text-neutral-400">
+      <p className="mt-3 text-xs text-ink-faint">
         Laporan ini cuma ngitung transaksi yang nempel ke booking. Penjualan
         paket dicatat terpisah di menu Paket, belum ikut ke angka di atas.
       </p>

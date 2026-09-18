@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/session-provider";
 
@@ -13,6 +13,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// "variable" (bukan array weight statis) — ini yang bikin Fraunces kepake
+// sebagai variable font, jadi sumbu "optical size"-nya jalan otomatis
+// (browser narik bentuk huruf yang lebih dekoratif pas dirender gede buat
+// headline, dan balik ke bentuk yang lebih rapat/mudah dibaca pas kecil).
+// Weight tunggal per elemen ("font-medium" dsb) tetap bisa dipakai seperti biasa.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: "variable",
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
   title: "Janjianyuk",
   description:
@@ -24,14 +36,14 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     title: "Janjianyuk",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#060a0f",
 };
 
 export default function RootLayout({
@@ -40,9 +52,9 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white text-neutral-900">
+      <body className="min-h-full flex flex-col bg-canvas text-ink">
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>

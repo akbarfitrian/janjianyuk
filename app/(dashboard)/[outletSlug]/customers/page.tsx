@@ -87,28 +87,28 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900">Pelanggan</h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <h1 className="text-xl font-semibold text-ink">Pelanggan</h1>
+      <p className="mt-1 text-sm text-ink-subtle">
         Data pelanggan, plus catatan alergi/preferensi kalau ada.
       </p>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-4"
+        className="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-line p-4"
       >
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Nama
           </label>
           <input
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="w-44">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             No. HP
           </label>
           <input
@@ -116,25 +116,25 @@ export default function CustomersPage() {
             placeholder="62812xxxxxxx"
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Catatan (opsional)
           </label>
           <input
             placeholder="Alergi, preferensi, dll"
             value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
           >
             {editingId ? "Simpan" : "Tambah"}
           </button>
@@ -142,18 +142,18 @@ export default function CustomersPage() {
             <button
               type="button"
               onClick={cancelEdit}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              className="rounded-md border border-line-strong px-4 py-2 text-sm font-medium text-ink-muted hover:bg-surface-2"
             >
               Batal
             </button>
           )}
         </div>
       </form>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-neutral-500">
+          <thead className="bg-surface-2 text-left text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Nama</th>
               <th className="px-4 py-2 font-medium">No. HP</th>
@@ -161,37 +161,37 @@ export default function CustomersPage() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-line">
             {isLoading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-ink-faint">
                   Memuat...
                 </td>
               </tr>
             ) : customers.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-ink-faint">
                   Belum ada pelanggan. Tambahin dulu lewat form di atas.
                 </td>
               </tr>
             ) : (
               customers.map((customer) => (
                 <tr key={customer.id}>
-                  <td className="px-4 py-3 text-neutral-900">{customer.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">{customer.phone}</td>
-                  <td className="px-4 py-3 text-neutral-600">
+                  <td className="px-4 py-3 text-ink">{customer.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">{customer.phone}</td>
+                  <td className="px-4 py-3 text-ink-muted">
                     {customer.notes ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => startEdit(customer)}
-                      className="mr-3 text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+                      className="mr-3 text-ink-muted underline underline-offset-4 hover:text-ink"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(customer.id)}
-                      className="text-red-600 underline underline-offset-4 hover:text-red-800"
+                      className="text-danger underline underline-offset-4 hover:text-danger"
                     >
                       Hapus
                     </button>

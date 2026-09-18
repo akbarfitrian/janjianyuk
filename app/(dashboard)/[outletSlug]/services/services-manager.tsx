@@ -19,7 +19,7 @@ const currency = new Intl.NumberFormat("id-ID", {
 });
 
 const inputClass =
-  "mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none";
+  "mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none";
 
 export function ServicesManager({
   outletSlug,
@@ -82,16 +82,16 @@ export function ServicesManager({
       <form
         id="create-service-form"
         action={handleCreate}
-        className="flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-4"
+        className="flex flex-wrap items-end gap-3 rounded-lg border border-line p-4"
       >
         <div className="min-w-[180px] flex-1">
-          <label htmlFor="name" className="block text-sm font-medium text-neutral-900">
+          <label htmlFor="name" className="block text-sm font-medium text-ink">
             Nama layanan
           </label>
           <input id="name" name="name" required className={inputClass} />
         </div>
         <div className="w-32">
-          <label htmlFor="durationMin" className="block text-sm font-medium text-neutral-900">
+          <label htmlFor="durationMin" className="block text-sm font-medium text-ink">
             Durasi (menit)
           </label>
           <input
@@ -104,7 +104,7 @@ export function ServicesManager({
           />
         </div>
         <div className="w-36">
-          <label htmlFor="price" className="block text-sm font-medium text-neutral-900">
+          <label htmlFor="price" className="block text-sm font-medium text-ink">
             Harga (Rp)
           </label>
           <input id="price" name="price" type="number" min={0} required className={inputClass} />
@@ -112,17 +112,17 @@ export function ServicesManager({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
         >
           Tambah
         </button>
       </form>
 
-      {formError && <p className="text-sm text-red-600">{formError}</p>}
+      {formError && <p className="text-sm text-danger">{formError}</p>}
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-left text-sm">
-          <thead className="bg-neutral-50 text-neutral-500">
+          <thead className="bg-surface-2 text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Nama</th>
               <th className="px-4 py-2 font-medium">Durasi</th>
@@ -130,10 +130,10 @@ export function ServicesManager({
               <th className="px-4 py-2 font-medium"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-200">
+          <tbody className="divide-y divide-line">
             {initialServices.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-ink-subtle">
                   Belum ada layanan.
                 </td>
               </tr>
@@ -150,7 +150,7 @@ export function ServicesManager({
                         name="name"
                         defaultValue={service.name}
                         required
-                        className="min-w-[160px] flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                        className="min-w-[160px] flex-1 rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
                       />
                       <input
                         name="durationMin"
@@ -158,7 +158,7 @@ export function ServicesManager({
                         min={1}
                         defaultValue={service.durationMin}
                         required
-                        className="w-28 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                        className="w-28 rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
                       />
                       <input
                         name="price"
@@ -166,19 +166,19 @@ export function ServicesManager({
                         min={0}
                         defaultValue={service.price}
                         required
-                        className="w-32 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                        className="w-32 rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
                       />
                       <button
                         type="submit"
                         disabled={isPending}
-                        className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+                        className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
                       >
                         Simpan
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                        className="rounded-md border border-line-strong px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-2"
                       >
                         Batal
                       </button>
@@ -187,20 +187,20 @@ export function ServicesManager({
                 </tr>
               ) : (
                 <tr key={service.id}>
-                  <td className="px-4 py-3 text-neutral-900">{service.name}</td>
-                  <td className="px-4 py-3 text-neutral-700">{service.durationMin} menit</td>
-                  <td className="px-4 py-3 text-neutral-700">{currency.format(service.price)}</td>
+                  <td className="px-4 py-3 text-ink">{service.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">{service.durationMin} menit</td>
+                  <td className="px-4 py-3 text-ink-muted">{currency.format(service.price)}</td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setEditingId(service.id)}
-                      className="mr-3 text-sm font-medium text-neutral-700 hover:underline"
+                      className="mr-3 text-sm font-medium text-ink-muted hover:underline"
                     >
                       Ubah
                     </button>
                     <button
                       onClick={() => handleDelete(service.id)}
                       disabled={deletingId === service.id}
-                      className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+                      className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
                     >
                       Hapus
                     </button>

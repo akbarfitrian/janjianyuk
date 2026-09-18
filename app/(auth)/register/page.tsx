@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { LogoMarkStacked } from "@/components/logo";
+import {
+  AuthShell,
+  errorTextClass,
+  fieldClass,
+  fieldLabelClass,
+  primaryButtonClass,
+} from "@/components/auth-shell";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -61,37 +66,33 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-24">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="mb-8 flex justify-center">
-          <LogoMarkStacked className="h-20 w-auto" />
-        </Link>
-        <h1 className="text-2xl font-semibold text-neutral-900">
-          Daftarkan outlet
+    <AuthShell active="register">
+      <div className="mb-7">
+        <h1 className="font-serif text-[1.9rem] font-medium leading-tight tracking-[-0.01em] text-ink">
+          Buat akun outlet
         </h1>
-        <p className="mt-2 text-sm text-neutral-600">
-          Sudah punya akun?{" "}
-          <Link href="/login" className="underline underline-offset-4">
-            Masuk
-          </Link>
+        <p className="mt-2 text-[15px] leading-relaxed text-ink-subtle">
+          Trial 14 hari, tanpa kartu kredit.
         </p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <div>
-            <label htmlFor="outletName" className="block text-sm font-medium text-neutral-900">
-              Nama klinik/salon
-            </label>
-            <input
-              id="outletName"
-              required
-              value={form.outletName}
-              onChange={update("outletName")}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="outletName" className={fieldLabelClass}>
+            Nama klinik/salon
+          </label>
+          <input
+            id="outletName"
+            required
+            value={form.outletName}
+            onChange={update("outletName")}
+            className={fieldClass}
+          />
+        </div>
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="ownerName" className="block text-sm font-medium text-neutral-900">
+            <label htmlFor="ownerName" className={fieldLabelClass}>
               Nama kamu
             </label>
             <input
@@ -99,26 +100,12 @@ export default function RegisterPage() {
               required
               value={form.ownerName}
               onChange={update("ownerName")}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className={fieldClass}
             />
           </div>
 
           <div>
-            <label htmlFor="ownerEmail" className="block text-sm font-medium text-neutral-900">
-              Email
-            </label>
-            <input
-              id="ownerEmail"
-              type="email"
-              required
-              value={form.ownerEmail}
-              onChange={update("ownerEmail")}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="ownerPhone" className="block text-sm font-medium text-neutral-900">
+            <label htmlFor="ownerPhone" className={fieldLabelClass}>
               No. WhatsApp
             </label>
             <input
@@ -127,36 +114,48 @@ export default function RegisterPage() {
               placeholder="62812xxxxxxx"
               value={form.ownerPhone}
               onChange={update("ownerPhone")}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className={fieldClass}
             />
           </div>
+        </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-neutral-900">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={8}
-              value={form.password}
-              onChange={update("password")}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-            />
-          </div>
+        <div>
+          <label htmlFor="ownerEmail" className={fieldLabelClass}>
+            Email
+          </label>
+          <input
+            id="ownerEmail"
+            type="email"
+            required
+            autoComplete="email"
+            value={form.ownerEmail}
+            onChange={update("ownerEmail")}
+            className={fieldClass}
+          />
+        </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        <div>
+          <label htmlFor="password" className={fieldLabelClass}>
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={form.password}
+            onChange={update("password")}
+            className={fieldClass}
+          />
+        </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
-          >
-            {isSubmitting ? "Memproses..." : "Daftar & mulai trial"}
-          </button>
-        </form>
-      </div>
-    </main>
+        {error && <p className={errorTextClass}>{error}</p>}
+
+        <button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
+          {isSubmitting ? "Memproses..." : "Daftar & mulai trial"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

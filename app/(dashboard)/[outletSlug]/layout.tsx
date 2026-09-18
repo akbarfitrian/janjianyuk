@@ -55,7 +55,7 @@ export default async function DashboardLayout({
 
       <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
         {access === "trial_expiring" && (
-          <p className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <p className="mb-6 rounded-md border border-warn-line bg-warn-soft px-4 py-3 text-sm text-warn">
             Trial berakhir {daysLeft === 0 ? "hari ini" : `${daysLeft} hari lagi`}.{" "}
             <Link
               href={`/${outletSlug}/settings/billing`}

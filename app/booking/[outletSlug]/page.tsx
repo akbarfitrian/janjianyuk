@@ -32,16 +32,16 @@ export default async function PublicBookingPage({
   return (
     <main className="flex-1 px-6 py-12">
       <div className="mx-auto max-w-lg">
-        <h1 className="text-xl font-semibold text-neutral-900">
+        <h1 className="text-xl font-semibold text-ink">
           {outlet.name}
         </h1>
-        <p className="mt-1 text-sm text-neutral-600">
+        <p className="mt-1 text-sm text-ink-muted">
           Pilih layanan dan jam kosong, isi data kamu, langsung dapat
           konfirmasi lewat WhatsApp.
         </p>
 
         {outlet.services.length === 0 ? (
-          <p className="mt-8 rounded-lg border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">
+          <p className="mt-8 rounded-lg border border-dashed border-line-strong p-6 text-center text-sm text-ink-subtle">
             {outlet.name} belum punya layanan yang bisa dibooking online.
           </p>
         ) : (

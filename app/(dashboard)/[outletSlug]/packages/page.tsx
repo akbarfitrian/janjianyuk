@@ -210,21 +210,21 @@ export default function PackagesPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900">Paket & Membership</h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <h1 className="text-xl font-semibold text-ink">Paket & Membership</h1>
+      <p className="mt-1 text-sm text-ink-subtle">
         Bikin paket treatment (misal &quot;5x Facial&quot;), jual ke pelanggan,
         lalu pantau sisa sesinya di sini tiap kali pelanggan dateng.
       </p>
 
       {/* --- Daftar paket --- */}
-      <h2 className="mt-8 text-sm font-semibold text-neutral-900">Daftar paket</h2>
+      <h2 className="mt-8 text-sm font-semibold text-ink">Daftar paket</h2>
 
       <form
         onSubmit={handlePackageSubmit}
-        className="mt-3 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-4"
+        className="mt-3 flex flex-wrap items-end gap-3 rounded-lg border border-line p-4"
       >
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Nama paket
           </label>
           <input
@@ -234,11 +234,11 @@ export default function PackagesPage() {
               setPackageForm((f) => ({ ...f, name: e.target.value }))
             }
             placeholder="Paket 5x Facial"
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="min-w-[160px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Layanan
           </label>
           <select
@@ -247,7 +247,7 @@ export default function PackagesPage() {
             onChange={(e) =>
               setPackageForm((f) => ({ ...f, serviceId: e.target.value }))
             }
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           >
             <option value="">Pilih layanan</option>
             {services.map((s) => (
@@ -258,7 +258,7 @@ export default function PackagesPage() {
           </select>
         </div>
         <div className="w-32">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Jumlah sesi
           </label>
           <input
@@ -269,11 +269,11 @@ export default function PackagesPage() {
             onChange={(e) =>
               setPackageForm((f) => ({ ...f, totalSessions: e.target.value }))
             }
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="w-40">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Harga paket (Rp)
           </label>
           <input
@@ -284,14 +284,14 @@ export default function PackagesPage() {
             onChange={(e) =>
               setPackageForm((f) => ({ ...f, price: e.target.value }))
             }
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={isSubmittingPackage}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
           >
             {editingId ? "Simpan" : "Tambah"}
           </button>
@@ -299,7 +299,7 @@ export default function PackagesPage() {
             <button
               type="button"
               onClick={cancelEdit}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              className="rounded-md border border-line-strong px-4 py-2 text-sm font-medium text-ink-muted hover:bg-surface-2"
             >
               Batal
             </button>
@@ -307,16 +307,16 @@ export default function PackagesPage() {
         </div>
 
         {services.length === 0 && (
-          <p className="w-full text-sm text-amber-700">
+          <p className="w-full text-sm text-warn">
             Tambahin minimal 1 layanan dulu di menu Layanan sebelum bikin paket.
           </p>
         )}
       </form>
-      {packageError && <p className="mt-2 text-sm text-red-600">{packageError}</p>}
+      {packageError && <p className="mt-2 text-sm text-danger">{packageError}</p>}
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-neutral-500">
+          <thead className="bg-surface-2 text-left text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Nama</th>
               <th className="px-4 py-2 font-medium">Layanan</th>
@@ -325,38 +325,38 @@ export default function PackagesPage() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-line">
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-ink-faint">
                   Memuat...
                 </td>
               </tr>
             ) : packages.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-ink-faint">
                   Belum ada paket. Tambahin dulu lewat form di atas.
                 </td>
               </tr>
             ) : (
               packages.map((pkg) => (
                 <tr key={pkg.id}>
-                  <td className="px-4 py-3 text-neutral-900">{pkg.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">{pkg.service.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">{pkg.totalSessions}x</td>
-                  <td className="px-4 py-3 text-neutral-600">
+                  <td className="px-4 py-3 text-ink">{pkg.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">{pkg.service.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">{pkg.totalSessions}x</td>
+                  <td className="px-4 py-3 text-ink-muted">
                     {formatRupiah(pkg.price)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => startEdit(pkg)}
-                      className="mr-3 text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+                      className="mr-3 text-ink-muted underline underline-offset-4 hover:text-ink"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handlePackageDelete(pkg.id)}
-                      className="text-red-600 underline underline-offset-4 hover:text-red-800"
+                      className="text-danger underline underline-offset-4 hover:text-danger"
                     >
                       Hapus
                     </button>
@@ -369,16 +369,16 @@ export default function PackagesPage() {
       </div>
 
       {/* --- Jual paket ke pelanggan --- */}
-      <h2 className="mt-10 text-sm font-semibold text-neutral-900">
+      <h2 className="mt-10 text-sm font-semibold text-ink">
         Jual paket ke pelanggan
       </h2>
 
       <form
         onSubmit={handleSellSubmit}
-        className="mt-3 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-4"
+        className="mt-3 flex flex-wrap items-end gap-3 rounded-lg border border-line p-4"
       >
         <div className="flex-1 min-w-[180px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Pelanggan
           </label>
           <select
@@ -387,7 +387,7 @@ export default function PackagesPage() {
             onChange={(e) =>
               setSellForm((f) => ({ ...f, customerId: e.target.value }))
             }
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           >
             <option value="">Pilih pelanggan</option>
             {customers.map((c) => (
@@ -398,7 +398,7 @@ export default function PackagesPage() {
           </select>
         </div>
         <div className="flex-1 min-w-[180px]">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Paket
           </label>
           <select
@@ -407,7 +407,7 @@ export default function PackagesPage() {
             onChange={(e) =>
               setSellForm((f) => ({ ...f, packageId: e.target.value }))
             }
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           >
             <option value="">Pilih paket</option>
             {packages.map((p) => (
@@ -418,7 +418,7 @@ export default function PackagesPage() {
           </select>
         </div>
         <div className="w-44">
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Kedaluwarsa (opsional)
           </label>
           <input
@@ -427,33 +427,33 @@ export default function PackagesPage() {
             onChange={(e) =>
               setSellForm((f) => ({ ...f, expiresAt: e.target.value }))
             }
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <button
           type="submit"
           disabled={isSubmittingSell}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
         >
           Jual paket
         </button>
 
         {customers.length === 0 || packages.length === 0 ? (
-          <p className="w-full text-sm text-amber-700">
+          <p className="w-full text-sm text-warn">
             Butuh minimal 1 pelanggan dan 1 paket sebelum bisa dijual.
           </p>
         ) : null}
       </form>
-      {sellError && <p className="mt-2 text-sm text-red-600">{sellError}</p>}
-      <p className="mt-2 text-xs text-neutral-400">
+      {sellError && <p className="mt-2 text-sm text-danger">{sellError}</p>}
+      <p className="mt-2 text-xs text-ink-faint">
         Catatan: penjualan paket belum otomatis tercatat di laporan pendapatan
         kasir — kalau pelanggan bayar tunai/QRIS/transfer buat beli paket,
         catat juga pembayarannya lewat menu Kasir biar kehitung.
       </p>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-neutral-500">
+          <thead className="bg-surface-2 text-left text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Pelanggan</th>
               <th className="px-4 py-2 font-medium">Paket</th>
@@ -463,16 +463,16 @@ export default function PackagesPage() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-line">
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-ink-faint">
                   Memuat...
                 </td>
               </tr>
             ) : customerPackages.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-ink-faint">
                   Belum ada paket yang terjual.
                 </td>
               </tr>
@@ -484,63 +484,63 @@ export default function PackagesPage() {
                 const isFull = cp.usedSessions >= cp.package.totalSessions;
                 return (
                   <tr key={cp.id}>
-                    <td className="px-4 py-3 text-neutral-900">
+                    <td className="px-4 py-3 text-ink">
                       {cp.customer.name}
-                      <span className="block text-xs text-neutral-500">
+                      <span className="block text-xs text-ink-subtle">
                         {cp.customer.phone}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {cp.package.name}
-                      <span className="block text-xs text-neutral-400">
+                      <span className="block text-xs text-ink-faint">
                         {cp.package.service.name}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-neutral-900">
+                    <td className="px-4 py-3 text-ink">
                       <span
                         className={
                           isExpired || isFull
-                            ? "text-neutral-400"
+                            ? "text-ink-faint"
                             : "font-medium"
                         }
                       >
                         {cp.usedSessions}/{cp.package.totalSessions}
                       </span>
                       {isExpired && (
-                        <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                        <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-xs text-danger">
                           Kedaluwarsa
                         </span>
                       )}
                       {!isExpired && isFull && (
-                        <span className="ml-2 rounded-full bg-neutral-200 px-2 py-0.5 text-xs text-neutral-600">
+                        <span className="ml-2 rounded-full bg-line px-2 py-0.5 text-xs text-ink-muted">
                           Habis
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {formatTanggal(cp.purchasedAt)}
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {cp.expiresAt ? formatTanggal(cp.expiresAt) : "—"}
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <button
                         onClick={() => handleSessionAction(cp.id, "use")}
                         disabled={isExpired || isFull}
-                        className="mr-3 text-neutral-600 underline underline-offset-4 hover:text-neutral-900 disabled:cursor-not-allowed disabled:text-neutral-300 disabled:no-underline"
+                        className="mr-3 text-ink-muted underline underline-offset-4 hover:text-ink disabled:cursor-not-allowed disabled:text-ink-faint disabled:no-underline"
                       >
                         Pakai sesi
                       </button>
                       <button
                         onClick={() => handleSessionAction(cp.id, "undo")}
                         disabled={cp.usedSessions === 0}
-                        className="mr-3 text-neutral-500 underline underline-offset-4 hover:text-neutral-900 disabled:cursor-not-allowed disabled:text-neutral-300 disabled:no-underline"
+                        className="mr-3 text-ink-subtle underline underline-offset-4 hover:text-ink disabled:cursor-not-allowed disabled:text-ink-faint disabled:no-underline"
                       >
                         Batal pakai
                       </button>
                       <button
                         onClick={() => handleCustomerPackageDelete(cp.id)}
-                        className="text-red-600 underline underline-offset-4 hover:text-red-800"
+                        className="text-danger underline underline-offset-4 hover:text-danger"
                       >
                         Hapus
                       </button>

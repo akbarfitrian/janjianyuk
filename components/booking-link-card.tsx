@@ -18,20 +18,20 @@ export function BookingLinkCard({ bookingUrl }: { bookingUrl: string }) {
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-neutral-200 p-5">
-      <p className="text-sm text-neutral-500">Link booking untuk pelanggan</p>
-      <p className="mt-1 text-xs text-neutral-400">
+    <div className="mt-4 rounded-lg border border-line p-5">
+      <p className="text-sm text-ink-subtle">Link booking untuk pelanggan</p>
+      <p className="mt-1 text-xs text-ink-faint">
         Tempel link ini di bio Instagram, status WhatsApp, atau kirim
         langsung ke pelanggan biar mereka bisa booking sendiri.
       </p>
       <div className="mt-3 flex items-center gap-2">
-        <code className="flex-1 truncate rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+        <code className="flex-1 truncate rounded-md bg-surface-2 px-3 py-2 text-sm text-ink-muted">
           {bookingUrl}
         </code>
         <button
           type="button"
           onClick={handleCopy}
-          className="shrink-0 rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
+          className="shrink-0 rounded-md bg-accent px-3 py-2 text-sm font-medium text-on-accent transition hover:bg-accent-hover"
         >
           {copied ? "Tersalin!" : "Salin link"}
         </button>

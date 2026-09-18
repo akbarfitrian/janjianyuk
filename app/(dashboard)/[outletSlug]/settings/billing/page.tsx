@@ -34,7 +34,7 @@ export default async function BillingPage({
   });
 
   if (!outlet) {
-    return <p className="text-sm text-neutral-500">Outlet nggak ketemu.</p>;
+    return <p className="text-sm text-ink-subtle">Outlet nggak ketemu.</p>;
   }
 
   const { access, daysLeft } = getEffectiveAccess(outlet);

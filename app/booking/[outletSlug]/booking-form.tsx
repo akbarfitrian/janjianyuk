@@ -117,11 +117,11 @@ export function PublicBookingForm({
 
   if (successAt) {
     return (
-      <div className="mt-8 rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <p className="text-sm font-medium text-green-900">
+      <div className="mt-8 rounded-lg border border-ok-line bg-ok-soft p-6 text-center">
+        <p className="text-sm font-medium text-ok">
           Booking kamu diterima!
         </p>
-        <p className="mt-2 text-sm text-green-800">
+        <p className="mt-2 text-sm text-ok">
           {formatTime(successAt)} di{" "}
           {new Date(successAt).toLocaleDateString("id-ID", {
             weekday: "long",
@@ -133,7 +133,7 @@ export function PublicBookingForm({
         </p>
         <button
           onClick={resetForm}
-          className="mt-4 text-sm font-medium text-green-900 underline underline-offset-4"
+          className="mt-4 text-sm font-medium text-ok underline underline-offset-4"
         >
           Booking lagi
         </button>
@@ -146,14 +146,14 @@ export function PublicBookingForm({
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
       <div>
-        <label className="block text-sm font-medium text-neutral-900">
+        <label className="block text-sm font-medium text-ink">
           Layanan
         </label>
         <select
           required
           value={serviceId}
           onChange={(e) => setServiceId(e.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+          className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
         >
           {services.map((s) => (
             <option key={s.id} value={s.id}>
@@ -165,13 +165,13 @@ export function PublicBookingForm({
 
       {staffList.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Staff (opsional)
           </label>
           <select
             value={staffId}
             onChange={(e) => setStaffId(e.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           >
             <option value="">Staf manapun</option>
             {staffList.map((s) => (
@@ -184,7 +184,7 @@ export function PublicBookingForm({
       )}
 
       <div>
-        <label className="block text-sm font-medium text-neutral-900">
+        <label className="block text-sm font-medium text-ink">
           Tanggal
         </label>
         <input
@@ -193,18 +193,18 @@ export function PublicBookingForm({
           min={todayStr()}
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+          className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
         />
       </div>
 
       <div>
-        <p className="block text-sm font-medium text-neutral-900">
+        <p className="block text-sm font-medium text-ink">
           Jam tersedia
         </p>
         {loadingSlots ? (
-          <p className="mt-2 text-sm text-neutral-400">Memuat jam kosong...</p>
+          <p className="mt-2 text-sm text-ink-faint">Memuat jam kosong...</p>
         ) : slots.length === 0 ? (
-          <p className="mt-2 text-sm text-neutral-400">
+          <p className="mt-2 text-sm text-ink-faint">
             Nggak ada jam kosong di tanggal ini.
           </p>
         ) : (
@@ -217,10 +217,10 @@ export function PublicBookingForm({
                 onClick={() => setSelectedSlot(slot.startTime)}
                 className={`rounded-md border px-2 py-2 text-sm ${
                   selectedSlot === slot.startTime
-                    ? "border-neutral-900 bg-neutral-900 text-white"
+                    ? "border-accent bg-accent text-on-accent"
                     : slot.available
-                      ? "border-neutral-300 text-neutral-900 hover:bg-neutral-100"
-                      : "cursor-not-allowed border-neutral-100 text-neutral-300 line-through"
+                      ? "border-line-strong text-ink hover:bg-surface-2"
+                      : "cursor-not-allowed border-line text-ink-faint line-through"
                 }`}
               >
                 {formatTime(slot.startTime)}
@@ -230,9 +230,9 @@ export function PublicBookingForm({
         )}
       </div>
 
-      <div className="space-y-3 border-t border-neutral-200 pt-6">
+      <div className="space-y-3 border-t border-line pt-6">
         <div>
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Nama
           </label>
           <input
@@ -240,11 +240,11 @@ export function PublicBookingForm({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             No. WhatsApp
           </label>
           <input
@@ -253,31 +253,31 @@ export function PublicBookingForm({
             placeholder="08xxxxxxxxxx"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-ink-subtle">
             Konfirmasi booking dikirim ke nomor ini.
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-900">
+          <label className="block text-sm font-medium text-ink">
             Catatan (opsional)
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <button
         type="submit"
         disabled={submitting || !selectedSlot}
-        className="w-full rounded-md bg-neutral-900 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+        className="w-full rounded-md bg-accent px-4 py-3 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
       >
         {submitting
           ? "Memproses..."

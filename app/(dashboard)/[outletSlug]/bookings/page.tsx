@@ -25,11 +25,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-neutral-200 text-neutral-600",
-  no_show: "bg-red-100 text-red-800",
+  pending: "bg-warn-soft text-warn",
+  confirmed: "bg-info-soft text-info",
+  completed: "bg-ok-soft text-ok",
+  cancelled: "bg-line text-ink-muted",
+  no_show: "bg-danger-soft text-danger",
 };
 
 function todayStr() {
@@ -166,8 +166,8 @@ export default function BookingsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-neutral-900">Booking</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h1 className="text-xl font-semibold text-ink">Booking</h1>
+          <p className="mt-1 text-sm text-ink-subtle">
             Kalender booking harian — booking dari halaman publik masuk
             otomatis dengan status &quot;Menunggu&quot;, atau tambahin
             manual dari sini.
@@ -175,7 +175,7 @@ export default function BookingsPage() {
         </div>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover"
         >
           {showForm ? "Tutup form" : "+ Booking baru"}
         </button>
@@ -184,7 +184,7 @@ export default function BookingsPage() {
       <div className="mt-6 flex items-center gap-3">
         <button
           onClick={() => setDate((d) => addDays(d, -1))}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100"
+          className="rounded-md border border-line-strong px-3 py-2 text-sm hover:bg-surface-2"
         >
           ← Sebelumnya
         </button>
@@ -192,19 +192,19 @@ export default function BookingsPage() {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+          className="rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
         />
         {!isToday && (
           <button
             onClick={() => setDate(todayStr())}
-            className="text-sm text-neutral-600 underline underline-offset-4"
+            className="text-sm text-ink-muted underline underline-offset-4"
           >
             Hari ini
           </button>
         )}
         <button
           onClick={() => setDate((d) => addDays(d, 1))}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100"
+          className="rounded-md border border-line-strong px-3 py-2 text-sm hover:bg-surface-2"
         >
           Selanjutnya →
         </button>
@@ -213,10 +213,10 @@ export default function BookingsPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-4"
+          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-line p-4"
         >
           <div className="flex-1 min-w-[180px]">
-            <label className="block text-sm font-medium text-neutral-900">
+            <label className="block text-sm font-medium text-ink">
               Pelanggan
             </label>
             <select
@@ -225,7 +225,7 @@ export default function BookingsPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, customerId: e.target.value }))
               }
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
             >
               <option value="">Pilih pelanggan</option>
               {customers.map((c) => (
@@ -236,7 +236,7 @@ export default function BookingsPage() {
             </select>
           </div>
           <div className="flex-1 min-w-[180px]">
-            <label className="block text-sm font-medium text-neutral-900">
+            <label className="block text-sm font-medium text-ink">
               Layanan
             </label>
             <select
@@ -245,7 +245,7 @@ export default function BookingsPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, serviceId: e.target.value }))
               }
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
             >
               <option value="">Pilih layanan</option>
               {services.map((s) => (
@@ -256,7 +256,7 @@ export default function BookingsPage() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="block text-sm font-medium text-neutral-900">
+            <label className="block text-sm font-medium text-ink">
               Staff (opsional)
             </label>
             <select
@@ -264,7 +264,7 @@ export default function BookingsPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, staffId: e.target.value }))
               }
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
             >
               <option value="">Tanpa staff tertentu</option>
               {staffList.map((s) => (
@@ -275,7 +275,7 @@ export default function BookingsPage() {
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-sm font-medium text-neutral-900">
+            <label className="block text-sm font-medium text-ink">
               Jam mulai
             </label>
             <input
@@ -283,30 +283,30 @@ export default function BookingsPage() {
               type="time"
               value={form.time}
               onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
             />
           </div>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
           >
             Simpan booking
           </button>
 
           {customers.length === 0 || services.length === 0 ? (
-            <p className="w-full text-sm text-amber-700">
+            <p className="w-full text-sm text-warn">
               Tambahin minimal 1 pelanggan dan 1 layanan dulu sebelum bikin
               booking.
             </p>
           ) : null}
         </form>
       )}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-neutral-500">
+          <thead className="bg-surface-2 text-left text-ink-subtle">
             <tr>
               <th className="px-4 py-2 font-medium">Jam</th>
               <th className="px-4 py-2 font-medium">Pelanggan</th>
@@ -316,35 +316,35 @@ export default function BookingsPage() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-line">
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-ink-faint">
                   Memuat...
                 </td>
               </tr>
             ) : bookings.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-ink-faint">
                   Belum ada booking di tanggal ini.
                 </td>
               </tr>
             ) : (
               bookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td className="px-4 py-3 text-neutral-900">
+                  <td className="px-4 py-3 text-ink">
                     {formatTime(booking.startTime)}–{formatTime(booking.endTime)}
                   </td>
-                  <td className="px-4 py-3 text-neutral-900">
+                  <td className="px-4 py-3 text-ink">
                     {booking.customer.name}
-                    <span className="block text-xs text-neutral-500">
+                    <span className="block text-xs text-ink-subtle">
                       {booking.customer.phone}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">
+                  <td className="px-4 py-3 text-ink-muted">
                     {booking.service.name}
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">
+                  <td className="px-4 py-3 text-ink-muted">
                     {booking.staff?.name ?? "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -353,7 +353,7 @@ export default function BookingsPage() {
                       onChange={(e) =>
                         handleStatusChange(booking.id, e.target.value)
                       }
-                      className={`rounded-full border-0 px-2 py-1 text-xs font-medium ${STATUS_COLOR[booking.status] ?? "bg-neutral-100 text-neutral-700"}`}
+                      className={`rounded-full border-0 px-2 py-1 text-xs font-medium ${STATUS_COLOR[booking.status] ?? "bg-surface-2 text-ink-muted"}`}
                     >
                       {Object.entries(STATUS_LABEL).map(([value, label]) => (
                         <option key={value} value={value}>
@@ -365,7 +365,7 @@ export default function BookingsPage() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleDelete(booking.id)}
-                      className="text-red-600 underline underline-offset-4 hover:text-red-800"
+                      className="text-danger underline underline-offset-4 hover:text-danger"
                     >
                       Hapus
                     </button>
