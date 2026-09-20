@@ -2,19 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { requireOutletSession } from "@/lib/api-session";
-
-const customerPackageInclude = {
-  customer: { select: { id: true, name: true, phone: true } },
-  package: {
-    select: {
-      id: true,
-      name: true,
-      totalSessions: true,
-      price: true,
-      service: { select: { id: true, name: true } },
-    },
-  },
-} as const;
+import { customerPackageInclude } from "@/lib/packages";
 
 async function findOwnedCustomerPackage(id: string, outletId: string) {
   const cp = await prisma.customerPackage.findUnique({

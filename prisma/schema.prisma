@@ -117,24 +117,37 @@ model Service {
   price       Int
   createdAt   DateTime @default(now())
 
-  bookings Booking[]
-  packages Package[]
+  bookings     Booking[]
+  packageItems PackageItem[]
 
   @@index([outletId])
 }
 
+// Satu paket bisa berisi beberapa layanan (mis. potong rambut + warnain
+// rambut). Satu "sesi" paket = semua layanan di paket itu dikerjakan
+// sekaligus dalam satu kunjungan, jadi counter sesi di CustomerPackage
+// tetap satu angka aja. Daftar layanannya disimpan di PackageItem.
 model Package {
   id            String @id @default(cuid())
   outletId      String
-  serviceId     String
-  service       Service @relation(fields: [serviceId], references: [id])
   name          String // contoh: "Paket 5x Facial"
   totalSessions Int
   price         Int
 
+  items            PackageItem[]
   customerPackages CustomerPackage[]
 
   @@index([outletId])
+}
+
+model PackageItem {
+  id        String  @id @default(cuid())
+  packageId String
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([packageId, serviceId])
   @@index([serviceId])
 }
 

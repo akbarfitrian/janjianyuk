@@ -5,12 +5,15 @@ import { useEffect, useState } from "react";
 type Service = { id: string; name: string; durationMin: number; price: number };
 type Customer = { id: string; name: string; phone: string };
 
+type ServiceRef = { id: string; name: string };
+type PackageItem = { service: ServiceRef };
+
 type Package = {
   id: string;
   name: string;
   totalSessions: number;
   price: number;
-  service: { id: string; name: string };
+  items: PackageItem[];
 };
 
 type CustomerPackage = {
@@ -24,15 +27,33 @@ type CustomerPackage = {
     name: string;
     totalSessions: number;
     price: number;
-    service: { id: string; name: string };
+    items: PackageItem[];
   };
 };
 
-const emptyPackageForm = { name: "", serviceId: "", totalSessions: "", price: "" };
+type PackageForm = {
+  name: string;
+  serviceIds: string[];
+  totalSessions: string;
+  price: string;
+};
+
+const emptyPackageForm: PackageForm = {
+  name: "",
+  serviceIds: [],
+  totalSessions: "",
+  price: "",
+};
 const emptySellForm = { customerId: "", packageId: "", expiresAt: "" };
 
 function formatRupiah(value: number) {
   return `Rp${value.toLocaleString("id-ID")}`;
+}
+
+// "Potong rambut + Warnain rambut" — dipakai di tabel daftar paket & paket
+// pelanggan biar paket gabungan kebaca sekilas.
+function serviceNames(items: PackageItem[]) {
+  return items.map((item) => item.service.name).join(" + ");
 }
 
 function formatTanggal(iso: string) {
@@ -90,7 +111,7 @@ export default function PackagesPage() {
     setEditingId(pkg.id);
     setPackageForm({
       name: pkg.name,
-      serviceId: pkg.service.id,
+      serviceIds: pkg.items.map((item) => item.service.id),
       totalSessions: String(pkg.totalSessions),
       price: String(pkg.price),
     });
@@ -103,14 +124,30 @@ export default function PackagesPage() {
     setPackageError(null);
   }
 
+  function toggleService(serviceId: string) {
+    setPackageForm((f) => ({
+      ...f,
+      serviceIds: f.serviceIds.includes(serviceId)
+        ? f.serviceIds.filter((id) => id !== serviceId)
+        : [...f.serviceIds, serviceId],
+    }));
+  }
+
   async function handlePackageSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPackageError(null);
+
+    // Checkbox group nggak bisa pakai atribut `required` bawaan browser.
+    if (packageForm.serviceIds.length === 0) {
+      setPackageError("Pilih minimal 1 layanan.");
+      return;
+    }
+
     setIsSubmittingPackage(true);
 
     const payload = {
       name: packageForm.name,
-      serviceId: packageForm.serviceId,
+      serviceIds: packageForm.serviceIds,
       totalSessions: Number(packageForm.totalSessions),
       price: Number(packageForm.price),
     };
@@ -212,8 +249,9 @@ export default function PackagesPage() {
     <div>
       <h1 className="text-xl font-semibold text-ink">Paket & Membership</h1>
       <p className="mt-1 text-sm text-ink-subtle">
-        Bikin paket treatment (misal &quot;5x Facial&quot;), jual ke pelanggan,
-        lalu pantau sisa sesinya di sini tiap kali pelanggan dateng.
+        Bikin paket treatment (misal &quot;5x Facial&quot;, atau gabungan
+        beberapa layanan seperti &quot;Potong + Warnain&quot;), jual ke
+        pelanggan, lalu pantau sisa sesinya di sini tiap kali pelanggan dateng.
       </p>
 
       {/* --- Daftar paket --- */}
@@ -236,26 +274,6 @@ export default function PackagesPage() {
             placeholder="Paket 5x Facial"
             className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
-        </div>
-        <div className="min-w-[160px]">
-          <label className="block text-sm font-medium text-ink">
-            Layanan
-          </label>
-          <select
-            required
-            value={packageForm.serviceId}
-            onChange={(e) =>
-              setPackageForm((f) => ({ ...f, serviceId: e.target.value }))
-            }
-            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
-          >
-            <option value="">Pilih layanan</option>
-            {services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
         </div>
         <div className="w-32">
           <label className="block text-sm font-medium text-ink">
@@ -287,6 +305,39 @@ export default function PackagesPage() {
             className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           />
         </div>
+        <fieldset className="w-full">
+          <legend className="block text-sm font-medium text-ink">
+            Layanan dalam paket
+          </legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {services.map((s) => {
+              const checked = packageForm.serviceIds.includes(s.id);
+              return (
+                <label
+                  key={s.id}
+                  className={`cursor-pointer select-none rounded-full border px-3 py-1.5 text-sm transition-colors focus-within:ring-2 focus-within:ring-accent/60 ${
+                    checked
+                      ? "border-accent bg-accent-soft font-medium text-ink"
+                      : "border-line-strong text-ink-muted hover:bg-surface-2"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleService(s.id)}
+                    className="sr-only"
+                  />
+                  {s.name}
+                </label>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-xs text-ink-faint">
+            Pilih satu atau lebih. Satu sesi = semua layanan yang dipilih
+            dikerjakan sekaligus dalam satu kunjungan.
+          </p>
+        </fieldset>
+
         <div className="flex gap-2">
           <button
             type="submit"
@@ -342,7 +393,9 @@ export default function PackagesPage() {
               packages.map((pkg) => (
                 <tr key={pkg.id}>
                   <td className="px-4 py-3 text-ink">{pkg.name}</td>
-                  <td className="px-4 py-3 text-ink-muted">{pkg.service.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">
+                    {serviceNames(pkg.items)}
+                  </td>
                   <td className="px-4 py-3 text-ink-muted">{pkg.totalSessions}x</td>
                   <td className="px-4 py-3 text-ink-muted">
                     {formatRupiah(pkg.price)}
@@ -493,7 +546,7 @@ export default function PackagesPage() {
                     <td className="px-4 py-3 text-ink-muted">
                       {cp.package.name}
                       <span className="block text-xs text-ink-faint">
-                        {cp.package.service.name}
+                        {serviceNames(cp.package.items)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-ink">

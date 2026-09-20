@@ -2,22 +2,10 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { requireOutletSession } from "@/lib/api-session";
+import { customerPackageInclude } from "@/lib/packages";
 
-const customerPackageInclude = {
-  customer: { select: { id: true, name: true, phone: true } },
-  package: {
-    select: {
-      id: true,
-      name: true,
-      totalSessions: true,
-      price: true,
-      service: { select: { id: true, name: true } },
-    },
-  },
-} as const;
-
-// customerPackages nggak punya kolom outletId langsung di schema — scope-nya
-// lewat relasi customer.outletId.
+// Scope outlet lewat relasi customer.outletId (customerPackages nggak punya
+// kolom outletId sendiri).
 export async function GET(request: Request) {
   const ctx = await requireOutletSession();
   if ("error" in ctx) return ctx.error;
