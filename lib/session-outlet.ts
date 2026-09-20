@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/session";
 
 /**
  * Ambil outletId dari sesi login, bukan dari form/URL, supaya server action
@@ -7,8 +7,8 @@ import { auth } from "@/lib/auth";
  * sebagai satu-satunya sumber outletId.
  */
 export async function requireOutletId(): Promise<string> {
-  const session = await auth();
-  const outletId = session?.user?.outletId;
+  const user = await getCurrentUser();
+  const outletId = user?.outletId;
 
   if (!outletId) {
     throw new Error("Unauthorized");

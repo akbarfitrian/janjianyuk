@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { formatHoursLabel } from "@/lib/business-hours";
 import { PublicBookingForm } from "./booking-form";
 
 export default async function PublicBookingPage({
@@ -14,6 +15,10 @@ export default async function PublicBookingPage({
     where: { slug: outletSlug },
     select: {
       name: true,
+      openTime: true,
+      closeTime: true,
+      breakStartTime: true,
+      breakEndTime: true,
       services: {
         orderBy: { createdAt: "desc" },
         select: { id: true, name: true, durationMin: true, price: true },
@@ -38,6 +43,9 @@ export default async function PublicBookingPage({
         <p className="mt-1 text-sm text-ink-muted">
           Pilih layanan dan jam kosong, isi data kamu, langsung dapat
           konfirmasi lewat WhatsApp.
+        </p>
+        <p className="mt-1 text-sm text-ink-subtle">
+          Jam operasional: {formatHoursLabel(outlet)}
         </p>
 
         {outlet.services.length === 0 ? (

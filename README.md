@@ -1,12 +1,12 @@
 # Janjianyuk
 
-SaaS booking & appointment management buat klinik kecantikan, salon, dan barbershop. Next.js (App Router) + Prisma + PostgreSQL (Supabase) + Auth.js.
+SaaS booking & appointment management buat klinik kecantikan, salon, dan barbershop. Next.js (App Router) + Prisma + PostgreSQL (Supabase) + Supabase Auth (Google OAuth).
 
 ## Status: Fase 4 — Lapisan Multi-Tenant SaaS (Billing)
 
 Yang udah jadi di fase ini (nambahin ke Fase 0-3 yang udah ada):
 
-- **Signup self-service** (`/register`) dan **trial 14 hari** udah ada dari Fase 0 (`app/api/auth/register`, `Outlet.trialEndsAt`) — Fase 4 nambahin **penegakan**-nya: `lib/plan.ts#getEffectiveAccess` ngitung status akses (`ok` / `trial_expiring` / `locked`) on-the-fly dari `trialEndsAt` + `planStatus`, nggak butuh cron buat "nge-expire" trial.
+- **Signup self-service** (lewat `/login`, satu halaman buat masuk dan daftar) dan **trial 14 hari** udah ada dari Fase 0 (`app/api/onboarding`, `Outlet.trialEndsAt`) — Fase 4 nambahin **penegakan**-nya: `lib/plan.ts#getEffectiveAccess` ngitung status akses (`ok` / `trial_expiring` / `locked`) on-the-fly dari `trialEndsAt` + `planStatus`, nggak butuh cron buat "nge-expire" trial.
 - Dashboard layout (`app/(dashboard)/[outletSlug]/layout.tsx`) + `components/access-gate.tsx`: kalau akses `locked` (trial habis, atau `planStatus` `past_due`/`cancelled`), semua menu dashboard diganti tampilan "Akses dikunci" KECUALI halaman **Billing** sendiri — owner tetap bisa masuk buat bayar. Sisa 3 hari trial, muncul banner peringatan (nggak ngunci apa pun).
 - Menu **Billing** (`settings/billing`) — status paket & tanggal trial berakhir, tombol **Upgrade ke Pro** yang bikin `Subscription` baru (status `pending`) lalu redirect ke halaman pembayaran hosted gateway, dan riwayat transaksi (5 terakhir).
 - `lib/payment.ts` — implementasi penuh dua provider (switch lewat `PAYMENT_GATEWAY_PROVIDER`, pola sama kayak `lib/wa-gateway.ts`):
@@ -49,36 +49,39 @@ Yang udah jadi di fase ini (nambahin ke Fase 0-2 yang udah ada):
      - **Connection pooling** (port 6543) → jadi `DATABASE_URL`
      - **Direct connection** (port 5432) → jadi `DIRECT_URL`
 
-3. **Isi environment variables**
+3. **Aktifin Google OAuth di Supabase**
+   - Di [Google Cloud Console](https://console.cloud.google.com) → buat OAuth client ID tipe "Web application", authorized redirect URI: `https://[PROJECT-REF].supabase.co/auth/v1/callback`
+   - Di dashboard Supabase → **Authentication → Providers → Google** → aktifin, isi Client ID & Client Secret dari langkah di atas
+   - Masih di **Authentication → URL Configuration** → tambahin `http://localhost:3000/auth/callback` ke Redirect URLs
+
+4. **Isi environment variables**
    ```bash
    cp .env.example .env
    ```
-   Isi `DATABASE_URL` dan `DIRECT_URL` dari langkah 2, lalu generate `AUTH_SECRET`:
-   ```bash
-   npx auth secret
-   ```
-   Isi juga `WA_GATEWAY_TOKEN` (token Fonnte/Wablas), `CRON_SECRET` (string acak bebas), dan `PAYMENT_GATEWAY_SECRET_KEY` (Server Key Midtrans atau Secret Key Xendit, mode sandbox dulu buat development) — semuanya udah dipakai mulai fase ini. Kalau pakai Xendit, isi juga `PAYMENT_GATEWAY_CALLBACK_TOKEN` biar webhook-nya bisa diverifikasi.
+   Isi `DATABASE_URL` dan `DIRECT_URL` dari langkah 2, `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari **Project Settings → API**. Isi juga `WA_GATEWAY_TOKEN` (token Fonnte/Wablas), `CRON_SECRET` (string acak bebas), dan `PAYMENT_GATEWAY_SECRET_KEY` (Server Key Midtrans atau Secret Key Xendit, mode sandbox dulu buat development) — semuanya udah dipakai mulai fase ini. Kalau pakai Xendit, isi juga `PAYMENT_GATEWAY_CALLBACK_TOKEN` biar webhook-nya bisa diverifikasi.
 
-4. **Push schema ke database**
+5. **Push schema ke database**
    ```bash
-   npx prisma db push
+   npx prisma migrate deploy
    ```
+   (Bukan `db push` lagi — ada migration baru yang drop tabel Account/Session/VerificationToken peninggalan NextAuth. Kalau database dev kamu masih punya migration history dari sebelumnya, `migrate deploy` bakal jalanin migration yang belum keaplikasi termasuk yang baru ini.)
 
-5. **Jalankan dev server**
+6. **Jalankan dev server**
    ```bash
    npm run dev
    ```
-   Buka `http://localhost:3000` → daftar outlet baru lewat `/register`.
+   Buka `http://localhost:3000` → daftar outlet baru lewat `/login` (tombol "Lanjut dengan Google").
 
-> **Catatan:** langkah 1 dan 4 butuh akses internet ke `registry.npmjs.org` dan `binaries.prisma.sh` buat download Prisma engine. Kalau kamu jalanin di sandbox/CI yang network-nya dibatasi, generate/push Prisma bakal gagal dengan error 403 — jalanin langkah ini di mesin dengan akses internet normal.
+> **Catatan:** langkah 1 dan 5 butuh akses internet ke `registry.npmjs.org` dan `binaries.prisma.sh` buat download Prisma engine. Kalau kamu jalanin di sandbox/CI yang network-nya dibatasi, generate/migrate Prisma bakal gagal dengan error 403 — jalanin langkah ini di mesin dengan akses internet normal.
 
 ## Deploy ke Vercel
 
 1. Push project ini ke GitHub
 2. Import repo-nya di [vercel.com](https://vercel.com/new)
-3. Di **Environment Variables**, masukin isi `.env` yang sama kayak lokal (`DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, dst)
-4. `postinstall` script udah otomatis jalanin `prisma generate` — Vercel bakal handle ini sendiri pas build
-5. Deploy
+3. Di **Environment Variables**, masukin isi `.env` yang sama kayak lokal (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dst)
+4. Tambahin domain production ke Supabase **Authentication → URL Configuration → Redirect URLs** (`https://<domain-kamu>/auth/callback`), dan ke Authorized redirect URI di Google Cloud Console kalau belum ke-cover sama domain Supabase-nya
+5. `postinstall` script udah otomatis jalanin `prisma generate` — Vercel bakal handle ini sendiri pas build
+6. Deploy
 
 Buat cron reminder H-1, daftarin `vercel.json` dengan schedule yang manggil `/api/cron/reminder` pakai header `Authorization: Bearer <CRON_SECRET>`, misalnya:
 ```json
@@ -96,4 +99,4 @@ Buat daftarin webhook payment gateway, arahkan ke:
 
 ## Lanjut ke Fase 5
 
-Validasi ke pengguna nyata — outreach WA dingin ke 10-20 klinik/salon, tawarin akses gratis (trial 14 hari udah otomatis jalan dari `/register`), kumpulin feedback, perbaiki bug/UX prioritas. Fase ini jalan paralel, nggak perlu nunggu fitur lain lengkap.
+Validasi ke pengguna nyata — outreach WA dingin ke 10-20 klinik/salon, tawarin akses gratis (trial 14 hari udah otomatis jalan begitu daftar lewat `/login`), kumpulin feedback, perbaiki bug/UX prioritas. Fase ini jalan paralel, nggak perlu nunggu fitur lain lengkap.

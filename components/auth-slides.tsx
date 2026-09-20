@@ -9,27 +9,26 @@ import { useEffect, useRef, useState } from "react";
  * kayak gini: chat numpuk dulu (paling kerasa), baru jadwal tabrakan, baru
  * pelanggan yang nggak dateng. Slide 1 yang paling sering kebaca karena
  * tampil duluan, jadi pain point terkuat ditaruh di situ.
+ *
+ * Sengaja nggak ada paragraf penjelasan di bawah headline — panel ini
+ * dijaga minimalis. Desktop: eyebrow, headline besar, satu baris ajakan.
+ * Mobile: cuma satu kalimat headline versi kecil, rata tengah (eyebrow dan
+ * ajakan disembunyiin) — kayak tagline di bawah wordmark.
  */
 const SLIDES = [
   {
     eyebrow: "Booking online",
     headline: "Kelola janji temu, tanpa drama.",
-    body:
-      "Pelanggan pilih layanan dan jam kosong sendiri lewat satu link. Nggak ada lagi chat “masih kosong nggak, kak?” yang numpuk tiap pagi.",
     action: "Bikin halaman booking outlet kamu — gratis 14 hari.",
   },
   {
     eyebrow: "Kalender per staff",
     headline: "Jadwal penuh, bukan jadwal tabrakan.",
-    body:
-      "Slot yang udah kepakai langsung ketutup buat staff itu. Dua pelanggan di jam dan terapis yang sama nggak akan kejadian.",
     action: "Atur jadwal semua staff dalam satu layar.",
   },
   {
     eyebrow: "Reminder WhatsApp",
     headline: "Pelanggan inget sendiri jadwalnya.",
-    body:
-      "Konfirmasi booking langsung kekirim, reminder H-1 nyusul otomatis ke WhatsApp mereka. Kamu nggak perlu ngetik satu-satu.",
     action: "Nyalain reminder otomatis hari ini.",
   },
 ];
@@ -61,7 +60,7 @@ export function AuthSlides() {
 
   return (
     <div
-      className="relative flex flex-1 flex-col justify-between gap-8"
+      className="relative flex flex-1 flex-col justify-between gap-5 md:gap-8"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -70,27 +69,24 @@ export function AuthSlides() {
       {/* Semua slide ditumpuk di grid cell yang sama biar tinggi panelnya
           ngikutin slide terpanjang — tanpa ini panel bakal loncat-loncat
           tiap ganti slide. */}
-      <div className="grid flex-1 items-end">
+      <div className="grid flex-1 items-start md:items-end">
         {SLIDES.map((slide, i) => {
           const isActive = i === index;
           return (
             <div
               key={slide.headline}
               aria-hidden={!isActive}
-              className={`col-start-1 row-start-1 transition-opacity duration-500 ${
+              className={`col-start-1 row-start-1 text-center transition-opacity duration-500 md:text-left ${
                 isActive ? "opacity-100" : "pointer-events-none opacity-0"
               }`}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+              <p className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-accent md:block">
                 {slide.eyebrow}
               </p>
-              <p className="mt-3 text-balance font-serif text-[2.5rem] font-medium leading-[1.12] tracking-[-0.01em] text-ink">
+              <p className="mx-auto max-w-[16rem] text-balance font-sans text-[13px] leading-relaxed text-ink-muted md:mx-0 md:mt-3 md:max-w-none md:font-serif md:text-[2.5rem] md:font-medium md:leading-[1.12] md:tracking-[-0.01em] md:text-ink">
                 {slide.headline}
               </p>
-              <p className="mt-4 max-w-sm text-[15px] leading-[1.7] text-ink-subtle">
-                {slide.body}
-              </p>
-              <p className="mt-5 flex items-center gap-1.5 text-[13px] font-semibold text-azure">
+              <p className="mt-6 hidden items-center gap-1.5 text-[13px] font-semibold text-azure md:flex">
                 {slide.action}
                 <span aria-hidden>→</span>
               </p>
@@ -99,7 +95,7 @@ export function AuthSlides() {
         })}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2 md:justify-start">
         {SLIDES.map((slide, i) => (
           <button
             key={slide.headline}

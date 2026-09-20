@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-import { auth } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getEffectiveAccess } from "@/lib/plan";
 import { AccessGate } from "@/components/access-gate";
@@ -15,16 +15,16 @@ export default async function DashboardLayout({
   params: Promise<{ outletSlug: string }>;
 }) {
   const { outletSlug } = await params;
-  const session = await auth();
+  const user = await getCurrentUser();
 
-  if (!session?.user) {
+  if (!user) {
     redirect("/login");
   }
 
-  if (session.user.outletSlug !== outletSlug) {
+  if (user.outletSlug !== outletSlug) {
     // Login tapi bukan pemilik outlet ini — jangan biarkan intip dashboard
     // outlet lain lewat ganti URL.
-    redirect(`/${session.user.outletSlug ?? ""}`);
+    redirect(`/${user.outletSlug ?? ""}`);
   }
 
   const outlet = await prisma.outlet.findUnique({
@@ -49,8 +49,8 @@ export default async function DashboardLayout({
         outletName={outlet.name}
         planName={outlet.planName}
         planStatus={outlet.planStatus}
-        userName={session.user.name}
-        userEmail={session.user.email}
+        userName={user.name}
+        userEmail={user.email}
       />
 
       <main className="flex-1 px-4 py-6 md:px-8 md:py-8">

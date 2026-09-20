@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 
+import { createClient } from "@/lib/supabase/server";
+import { findOrAdoptDbUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 const TRIAL_DAYS = 14;
@@ -28,41 +29,56 @@ async function uniqueSlug(base: string) {
 }
 
 export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  if (!authUser) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const existingUser = await findOrAdoptDbUser(authUser);
+
+  if (existingUser?.outletId) {
+    return NextResponse.json(
+      { error: "Akun ini udah terhubung ke outlet." },
+      { status: 409 },
+    );
+  }
+
   const body = await request.json();
-  const { outletName, ownerName, ownerEmail, ownerPhone, password } = body as {
+  const { outletName, ownerPhone } = body as {
     outletName?: string;
-    ownerName?: string;
-    ownerEmail?: string;
     ownerPhone?: string;
-    password?: string;
   };
 
-  if (!outletName || !ownerName || !ownerEmail || !ownerPhone || !password) {
+  if (!outletName || !ownerPhone) {
     return NextResponse.json(
       { error: "Semua field wajib diisi." },
       { status: 400 },
     );
   }
 
-  if (password.length < 8) {
+  const ownerEmail = authUser.email;
+  if (!ownerEmail) {
     return NextResponse.json(
-      { error: "Password minimal 8 karakter." },
+      { error: "Akun Google ini nggak punya email." },
       { status: 400 },
     );
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email: ownerEmail },
-  });
-  if (existingUser) {
-    return NextResponse.json(
-      { error: "Email sudah terdaftar." },
-      { status: 409 },
-    );
-  }
+  const ownerName =
+    existingUser?.name ??
+    (authUser.user_metadata?.full_name as string | undefined) ??
+    (authUser.user_metadata?.name as string | undefined) ??
+    "Pemilik outlet";
+  const avatarUrl =
+    existingUser?.image ??
+    (authUser.user_metadata?.avatar_url as string | undefined) ??
+    null;
 
   const slug = await uniqueSlug(outletName);
-  const passwordHash = await bcrypt.hash(password, 10);
   const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
 
   const outlet = await prisma.$transaction(async (tx) => {
@@ -77,12 +93,20 @@ export async function POST(request: Request) {
       },
     });
 
-    await tx.user.create({
-      data: {
-        name: ownerName,
+    // Baris User mungkin udah dibuat parsial di kunjungan sebelumnya kalau
+    // user sempet nyasar ke /onboarding tapi belum submit — upsert biar
+    // idempoten.
+    await tx.user.upsert({
+      where: { id: authUser.id },
+      create: {
+        id: authUser.id,
         email: ownerEmail,
-        password: passwordHash,
+        name: ownerName,
+        image: avatarUrl,
         role: "owner",
+        outletId: createdOutlet.id,
+      },
+      update: {
         outletId: createdOutlet.id,
       },
     });

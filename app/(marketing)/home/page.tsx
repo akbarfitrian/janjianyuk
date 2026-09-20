@@ -28,16 +28,10 @@ export default function MarketingHomePage() {
         </p>
         <div className="mt-10 flex items-center gap-4">
           <Link
-            href="/register"
+            href="/login"
             className="rounded-md bg-accent px-5 py-3 text-sm font-medium text-on-accent hover:bg-accent-hover"
           >
             Coba gratis
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-azure underline underline-offset-4 transition-colors hover:text-azure-hover"
-          >
-            Sudah punya akun? Masuk
           </Link>
         </div>
       </section>

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 
 import { LogoMark } from "@/components/logo";
+import { createClient } from "@/lib/supabase/client";
 
 function OverviewIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -89,6 +89,15 @@ function BillingIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function ClockIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  );
+}
+
 const navItems = [
   { href: "", label: "Overview", icon: OverviewIcon },
   { href: "/bookings", label: "Booking", icon: BookingIcon },
@@ -97,6 +106,7 @@ const navItems = [
   { href: "/packages", label: "Paket", icon: PackagesIcon },
   { href: "/kasir", label: "Kasir", icon: CashierIcon },
   { href: "/staff", label: "Staff", icon: StaffIcon },
+  { href: "/settings/hours", label: "Jam Operasional", icon: ClockIcon },
   { href: "/settings/billing", label: "Billing", icon: BillingIcon },
 ];
 
@@ -209,6 +219,7 @@ function UserMenu({
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const displayName = userName?.trim() || userEmail || "Pengguna";
   const initial = (userName?.trim() || userEmail || "?").charAt(0).toUpperCase();
@@ -233,9 +244,15 @@ function UserMenu({
           <button
             type="button"
             disabled={loggingOut}
-            onClick={() => {
+            onClick={async () => {
               setLoggingOut(true);
-              signOut({ callbackUrl: "/login" });
+              const supabase = createClient();
+              await supabase.auth.signOut();
+              // router.refresh() bikin server component ke-render ulang
+              // dengan session terbaru (udah kosong), jadi layout dashboard
+              // langsung redirect ke /login lewat getCurrentUser().
+              router.push("/login");
+              router.refresh();
             }}
             className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-danger hover:bg-danger-soft disabled:opacity-60"
           >

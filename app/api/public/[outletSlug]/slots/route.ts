@@ -36,7 +36,13 @@ export async function GET(
 
   const outlet = await prisma.outlet.findUnique({
     where: { slug: outletSlug },
-    select: { id: true },
+    select: {
+      id: true,
+      openTime: true,
+      closeTime: true,
+      breakStartTime: true,
+      breakEndTime: true,
+    },
   });
   if (!outlet) {
     return NextResponse.json({ error: "Outlet tidak ditemukan." }, { status: 404 });
@@ -61,7 +67,12 @@ export async function GET(
   const staffIds = allStaff.map((s) => s.id);
 
   const bookings = await getBookingsForDay(outlet.id, date);
-  const candidates = generateCandidateSlots(date, service.durationMin);
+  const candidates = generateCandidateSlots(date, service.durationMin, {
+    openTime: outlet.openTime,
+    closeTime: outlet.closeTime,
+    breakStartTime: outlet.breakStartTime,
+    breakEndTime: outlet.breakEndTime,
+  });
 
   const slots = candidates.map((start) => {
     const end = new Date(start.getTime() + service.durationMin * 60 * 1000);

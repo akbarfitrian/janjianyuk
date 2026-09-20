@@ -7,68 +7,38 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// Auth (Auth.js / NextAuth v5 + Prisma Adapter)
+// Auth (Supabase Auth — Google OAuth)
 //
-// User adalah akun login. Outlet adalah tenant (klinik/salon). Owner yang
-// register lewat /register otomatis dapat Outlet + User (role "owner") yang
+// Kredensial & sesi login dikelola sepenuhnya oleh Supabase Auth (tabel
+// auth.users bawaannya, di luar schema Prisma ini) — nggak ada lagi
+// Account/Session/VerificationToken di sini, dan nggak ada password
+// tersimpan di database aplikasi.
+//
+// User di bawah ini cuma nyimpen data BISNIS (role, outletId), key-nya
+// (`id`) sengaja disamain persis dengan id user di Supabase Auth (uuid),
+// bukan cuid buatan Prisma sendiri — lihat app/auth/callback dan
+// app/api/onboarding yang nulis baris ini pertama kali.
+//
+// Outlet adalah tenant (klinik/salon). Owner yang login Google pertama kali
+// diarahkan ke /onboarding buat bikin Outlet + User (role "owner") yang
 // saling terhubung lewat outletId. Login staff individual (role "staff")
 // menyusul di fase berikutnya kalau dibutuhkan — untuk sekarang cukup satu
 // akun owner per outlet.
 // ---------------------------------------------------------------------------
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String? // hash bcrypt; null kalau nanti nambah OAuth provider
-  role          String    @default("owner") // owner, staff — role bisnis, beda dari role NextAuth
+  id    String  @id // uuid, sama dengan auth.users.id di Supabase
+  name  String?
+  email String  @unique
+  image String?
+  role  String  @default("owner") // owner, staff — role bisnis
 
   outletId String?
   outlet   Outlet? @relation(fields: [outletId], references: [id])
 
-  accounts Account[]
-  sessions Session[]
-
   createdAt DateTime @default(now())
 
   @@index([outletId])
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }
 
 // ---------------------------------------------------------------------------
@@ -86,7 +56,19 @@ model Outlet {
   planStatus  String    @default("trial") // trial, active, past_due, cancelled
   planName    String    @default("free") // free, pro
   trialEndsAt DateTime?
-  createdAt   DateTime  @default(now())
+
+  // Jam operasional, diatur sendiri per outlet (lihat lib/business-hours.ts
+  // + lib/availability.ts buat cara pakainya). Disimpan sebagai "HH:mm"
+  // (WIB) biar gampang dicocokin ke <input type="time"> di form settings.
+  // breakStartTime/breakEndTime null = outlet itu nggak ambil jam istirahat;
+  // kalau diisi, dua-duanya wajib keisi bareng (divalidasi di
+  // lib/business-hours.ts#validateBusinessHours, bukan di level schema).
+  openTime       String  @default("09:00")
+  closeTime      String  @default("18:00")
+  breakStartTime String?
+  breakEndTime   String?
+
+  createdAt DateTime @default(now())
 
   users         User[]
   staff         Staff[]

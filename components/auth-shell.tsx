@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { LogoMark } from "@/components/logo";
 import { AuthSlides } from "@/components/auth-slides";
 
 export const fieldLabelClass =
@@ -19,51 +18,28 @@ function BrandLockup({ className = "" }: { className?: string }) {
     <Link
       href="/"
       aria-label="Janjianyuk"
-      className={`flex items-center justify-center gap-3 ${className}`}
+      className={`flex items-center justify-center ${className}`}
     >
-      <LogoMark className="h-11 w-11" />
-      <span className="text-[1.75rem] font-semibold tracking-[-0.02em] text-ink">
-        janjianyuk
+      <span className="font-serif text-[1.75rem] font-semibold italic tracking-[-0.01em] text-ink">
+        Janjianyuk
       </span>
     </Link>
   );
 }
 
-function TabLink({
-  href,
-  isActive,
-  children,
-}: {
-  href: string;
-  isActive: boolean;
-  children: ReactNode;
-}) {
+/**
+ * Kartu di tengah layar, dua bagian: panel brand (logo + slide) dan panel
+ * form. Di mobile keduanya numpuk vertikal (brand di atas, form di bawah);
+ * di desktop (md+) jadi dua kolom. Panel brand cuma satu instance yang sama
+ * di semua ukuran layar — beda tampilannya diatur lewat class responsif, jadi
+ * timer slide nggak jalan dobel.
+ */
+export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <Link
-      href={href}
-      className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${
-        isActive
-          ? "bg-accent text-on-accent"
-          : "text-ink-subtle hover:text-ink"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-export function AuthShell({
-  active,
-  children,
-}: {
-  active: "login" | "register";
-  children: ReactNode;
-}) {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-8 sm:px-6 sm:py-10">
-      <div className="grid w-full max-w-4xl overflow-hidden rounded-[28px] border border-line shadow-[0_50px_100px_-30px_rgba(0,0,0,0.8)] md:grid-cols-[1fr_1.05fr]">
-        {/* Brand panel — desktop only */}
-        <div className="relative hidden flex-col justify-between overflow-hidden bg-surface-2 px-10 py-12 md:flex">
+    <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-8 sm:px-6 sm:py-10">
+      <div className="grid w-full max-w-md overflow-hidden rounded-[28px] border border-line shadow-[0_50px_100px_-30px_rgba(0,0,0,0.8)] md:max-w-4xl md:grid-cols-[1fr_1.05fr]">
+        {/* Panel brand */}
+        <div className="relative flex flex-col overflow-hidden bg-surface-2 px-6 py-9 md:justify-between md:px-10 md:py-12">
           <div
             aria-hidden
             className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-accent/[0.18] blur-3xl"
@@ -74,28 +50,14 @@ export function AuthShell({
           />
           <BrandLockup className="relative" />
 
-          <div className="relative mt-10 flex flex-1 flex-col">
+          <div className="relative mt-4 flex flex-1 flex-col md:mt-10">
             <AuthSlides />
           </div>
         </div>
 
-        {/* Brand strip — mobile only */}
-        <div className="flex items-center justify-center bg-surface-2 px-6 py-6 md:hidden">
-          <BrandLockup />
-        </div>
-
-        {/* Form panel */}
-        <div className="flex flex-col bg-surface px-6 py-8 sm:px-10 sm:py-12">
-          <div className="mb-8 inline-flex w-fit rounded-full border border-line bg-surface-2 p-1">
-            <TabLink href="/login" isActive={active === "login"}>
-              Masuk
-            </TabLink>
-            <TabLink href="/register" isActive={active === "register"}>
-              Daftar
-            </TabLink>
-          </div>
-
-          {children}
+        {/* Panel form — konten dipusatkan vertikal. */}
+        <div className="flex flex-col justify-center bg-surface px-6 py-8 sm:px-10 md:py-12">
+          <div className="mx-auto w-full max-w-sm">{children}</div>
         </div>
       </div>
     </main>
