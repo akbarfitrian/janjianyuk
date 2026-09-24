@@ -113,7 +113,7 @@ export default function CustomersPage() {
           </label>
           <input
             required
-            placeholder="62812xxxxxxx"
+            placeholder="0812xxxxxxxx"
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
             className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
@@ -149,6 +149,10 @@ export default function CustomersPage() {
           )}
         </div>
       </form>
+      <p className="mt-2 text-xs text-ink-faint">
+        No. HP boleh ditulis 08…, +62…, atau 62… — otomatis disimpan sebagai
+        62… (format WhatsApp). Satu no. HP cuma bisa dipakai satu pelanggan.
+      </p>
       {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-line">

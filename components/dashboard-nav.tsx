@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { LogoMark } from "@/components/logo";
+import { formatPlanLine } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/client";
 
 function OverviewIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -43,8 +44,11 @@ function CustomersIcon({ className = "h-4 w-4" }: { className?: string }) {
 function ServicesIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2 4 4v8c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V4Z" />
-      <path d="M9 12l2 2 4-4" />
+      <circle cx="6" cy="6" r="3" />
+      <path d="M8.12 8.12 12 12" />
+      <path d="M20 4 8.12 15.88" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M14.8 14.8 20 20" />
     </svg>
   );
 }
@@ -98,8 +102,21 @@ function ClockIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function HolidayIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="17" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="9.5" y1="13.5" x2="14.5" y2="18.5" />
+      <line x1="14.5" y1="13.5" x2="9.5" y2="18.5" />
+    </svg>
+  );
+}
+
 const navItems = [
-  { href: "", label: "Overview", icon: OverviewIcon },
+  { href: "", label: "Ringkasan", icon: OverviewIcon },
   { href: "/bookings", label: "Booking", icon: BookingIcon },
   { href: "/customers", label: "Pelanggan", icon: CustomersIcon },
   { href: "/services", label: "Layanan", icon: ServicesIcon },
@@ -107,7 +124,8 @@ const navItems = [
   { href: "/kasir", label: "Kasir", icon: CashierIcon },
   { href: "/staff", label: "Staff", icon: StaffIcon },
   { href: "/settings/hours", label: "Jam Operasional", icon: ClockIcon },
-  { href: "/settings/billing", label: "Billing", icon: BillingIcon },
+  { href: "/settings/schedule", label: "Libur & Cuti", icon: HolidayIcon },
+  { href: "/settings/billing", label: "Tagihan", icon: BillingIcon },
 ];
 
 function MenuIcon() {
@@ -182,7 +200,7 @@ function OutletBrand({
           {outletName}
         </p>
         <p className="truncate text-xs text-ink-subtle">
-          Paket {planName} · {planStatus}
+          {formatPlanLine(planName, planStatus)}
         </p>
       </div>
     </div>
@@ -190,17 +208,32 @@ function OutletBrand({
 }
 
 function NavLinks({ outletSlug }: { outletSlug: string }) {
+  const pathname = usePathname();
+
   return (
     <>
       {navItems.map((item) => {
         const Icon = item.icon;
+        const href = `/${outletSlug}${item.href}`;
+        // Ringkasan (href kosong) harus persis sama, kalau nggak dia bakal
+        // aktif di semua halaman. Menu lain tetap aktif pas di sub-halamannya.
+        const active =
+          item.href === ""
+            ? pathname === href
+            : pathname === href || pathname.startsWith(`${href}/`);
+
         return (
           <Link
             key={item.href}
-            href={`/${outletSlug}${item.href}`}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+            href={href}
+            aria-current={active ? "page" : undefined}
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+              active
+                ? "bg-surface-2 font-medium text-ink"
+                : "text-ink-muted hover:bg-surface-2 hover:text-ink"
+            }`}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className={`h-4 w-4 shrink-0 ${active ? "text-accent" : ""}`} />
             {item.label}
           </Link>
         );
@@ -271,7 +304,11 @@ function UserMenu({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent">
           {initial}
         </span>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+        <span
+          className={`min-w-0 flex-1 truncate text-sm font-medium text-ink ${
+            userName?.trim() ? "capitalize" : ""
+          }`}
+        >
           {displayName}
         </span>
         <MoreIcon className="h-4 w-4 shrink-0 text-ink-faint" />
@@ -335,7 +372,7 @@ export function DashboardNav({
       </div>
 
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex md:w-56 md:shrink-0 md:flex-col md:border-r md:border-line md:bg-surface md:px-4 md:py-6">
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:overflow-y-auto md:border-r md:border-line md:bg-surface md:px-4 md:py-6">
         <OutletBrand outletName={outletName} planName={planName} planStatus={planStatus} />
         <nav className="mt-6 flex flex-col gap-1">
           <NavLinks outletSlug={outletSlug} />

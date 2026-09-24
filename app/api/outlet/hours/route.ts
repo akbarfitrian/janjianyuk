@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { requireOutletSession } from "@/lib/api-session";
+import { requireActiveOutletSession } from "@/lib/api-session";
 import { validateBusinessHours } from "@/lib/business-hours";
 
 // Jam operasional itu kolom di model Outlet sendiri (bukan tabel
 // terpisah kayak services/staff/dst), jadi GET/PATCH di sini baca-tulis
 // langsung ke Outlet, di-scope ke outletId dari session.
 export async function GET() {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const outlet = await prisma.outlet.findUnique({
@@ -29,7 +29,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const body = await request.json().catch(() => ({}));

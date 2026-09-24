@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
-    title: "Janjianyuk",
+    title: "JanjianYuk",
     statusBarStyle: "black-translucent",
   },
 };

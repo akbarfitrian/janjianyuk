@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { requireOutletSession } from "@/lib/api-session";
+import { requireActiveOutletSession } from "@/lib/api-session";
 
 export async function GET() {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const staff = await prisma.staff.findMany({
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const body = await request.json();

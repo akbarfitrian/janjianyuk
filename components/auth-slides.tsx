@@ -33,7 +33,7 @@ const SLIDES = [
   },
 ];
 
-const INTERVAL_MS = 6000;
+const INTERVAL_MS = 3000;
 
 export function AuthSlides() {
   const [index, setIndex] = useState(0);
@@ -46,9 +46,9 @@ export function AuthSlides() {
     ).matches;
   }, []);
 
-  // Auto-rotate berhenti pas kursor/fokus ada di panel — biar orang yang lagi
+  // Auto-rotate berhenti pas kursor ada di panel — biar orang yang lagi
   // baca slide-nya nggak keburu keganti. Yang minta reduced motion nggak
-  // dapet auto-rotate sama sekali, tapi dot-nya tetep bisa diklik manual.
+  // dapet auto-rotate sama sekali (slide pertama tetap tampil).
   useEffect(() => {
     if (paused || reducedMotion.current) return;
     const timer = setInterval(
@@ -63,8 +63,6 @@ export function AuthSlides() {
       className="relative flex flex-1 flex-col justify-between gap-5 md:gap-8"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
     >
       {/* Semua slide ditumpuk di grid cell yang sama biar tinggi panelnya
           ngikutin slide terpanjang — tanpa ini panel bakal loncat-loncat
@@ -83,8 +81,8 @@ export function AuthSlides() {
               <p className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-accent md:block">
                 {slide.eyebrow}
               </p>
-              <p className="mx-auto max-w-[16rem] text-balance font-sans text-[13px] leading-relaxed text-ink-muted md:mx-0 md:mt-3 md:max-w-none md:font-serif md:text-[2.5rem] md:font-medium md:leading-[1.12] md:tracking-[-0.01em] md:text-ink">
-                {slide.headline}
+              <p className="mx-auto max-w-[16rem] text-balance font-sans text-[13px] leading-relaxed text-ink-muted md:mx-0 md:mt-3 md:max-w-none md:font-serif md:text-[2rem] md:font-medium md:leading-[1.15] md:tracking-[-0.01em] md:text-ink">
+                 {slide.headline}
               </p>
               <p className="mt-6 hidden items-center gap-1.5 text-[13px] font-semibold text-azure md:flex">
                 {slide.action}
@@ -93,23 +91,6 @@ export function AuthSlides() {
             </div>
           );
         })}
-      </div>
-
-      <div className="flex items-center justify-center gap-2 md:justify-start">
-        {SLIDES.map((slide, i) => (
-          <button
-            key={slide.headline}
-            type="button"
-            onClick={() => setIndex(i)}
-            aria-label={`Slide ${i + 1}: ${slide.headline}`}
-            aria-current={i === index}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === index
-                ? "w-7 bg-accent"
-                : "w-1.5 bg-line-strong hover:bg-ink-faint"
-            }`}
-          />
-        ))}
       </div>
     </div>
   );

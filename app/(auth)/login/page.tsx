@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleAuthButton } from "@/components/google-auth-button";
 
@@ -13,7 +15,7 @@ export default async function LoginPage({
 
   return (
     <AuthShell>
-      <h1 className="text-center font-serif text-[1.4rem] font-medium leading-tight tracking-[-0.01em] text-ink md:text-[1.9rem]">
+      <h1 className="text-center font-serif text-[1.25rem] font-medium leading-tight tracking-[-0.01em] text-ink md:text-[1.5rem]">
         Masuk atau daftar
       </h1>
 
@@ -31,6 +33,17 @@ export default async function LoginPage({
       <div className="mt-6 md:mt-8">
         <GoogleAuthButton />
       </div>
+
+      <p className="mt-4 text-center text-xs text-ink-faint">
+        Dengan melanjutkan, kamu menyetujui{" "}
+        <Link
+          href="/syarat-ketentuan"
+          className="underline underline-offset-4 hover:text-ink"
+        >
+          Syarat &amp; Ketentuan
+        </Link>
+        .
+      </p>
     </AuthShell>
   );
 }

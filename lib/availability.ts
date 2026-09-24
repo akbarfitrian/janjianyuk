@@ -1,11 +1,26 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { SLOT_STEP_MIN, timeToMinutes, type OutletHours } from "@/lib/business-hours";
-import { endOfJakartaDay, startOfJakartaDay } from "@/lib/tz";
+import { endOfJakartaDay, startOfJakartaDay, toJakartaDateString } from "@/lib/tz";
+
+// Client biasa (prisma) atau client di dalam interactive transaction (tx) —
+// keduanya punya method query yang sama, cuma beda konteks transaction-nya.
+type QueryClient = PrismaClient | Prisma.TransactionClient;
 
 // Status booking yang dianggap "masih pakai slot" — cancelled & no_show
 // nggak lagi ngeblok jam yang sama, sama kayak clash check admin di
 // app/api/bookings/route.ts (Fase 1).
 const BLOCKING_STATUSES = ["pending", "confirmed", "completed"];
+
+// Booking online minimal segini menit sebelum jam mulai — biar outlet sempat
+// lihat & siap-siap, dan slot yang sudah lewat / mepet nggak kelihatan
+// tersedia di halaman publik. Dipakai bareng oleh /slots (tampilan) dan POST
+// booking publik (penjaga di server), jadi angkanya cukup diubah di sini.
+export const PUBLIC_BOOKING_MIN_LEAD_MIN = 30;
+
+export function meetsMinLeadTime(start: Date, nowMs: number = Date.now()) {
+  return start.getTime() >= nowMs + PUBLIC_BOOKING_MIN_LEAD_MIN * 60_000;
+}
 
 export type BookingSlot = {
   id: string;
@@ -30,10 +45,11 @@ export function dayRange(dateStr: string) {
 export async function getBookingsForDay(
   outletId: string,
   dateStr: string,
+  db: QueryClient = prisma,
 ): Promise<BookingSlot[]> {
   const { start, end } = dayRange(dateStr);
 
-  return prisma.booking.findMany({
+  return db.booking.findMany({
     where: {
       outletId,
       status: { in: BLOCKING_STATUSES },
@@ -83,6 +99,22 @@ export function generateCandidateSlots(
   }
 
   return slots;
+}
+
+// True kalau `start` persis salah satu jam yang ditawarkan halaman publik
+// (/slots) buat layanan berdurasi segini: di dalam jam operasional, di luar
+// jam istirahat, sejajar grid SLOT_STEP_MIN, dan selesai sebelum tutup. POST
+// booking publik tanpa login, jadi server nggak boleh cuma percaya jam yang
+// dikirim client.
+export function isOfferedSlot(
+  start: Date,
+  durationMin: number,
+  hours: OutletHours,
+) {
+  const dateStr = toJakartaDateString(start);
+  return generateCandidateSlots(dateStr, durationMin, hours).some(
+    (candidate) => candidate.getTime() === start.getTime(),
+  );
 }
 
 // Slot dianggap bentrok buat staff tertentu kalau ada booking aktif staff

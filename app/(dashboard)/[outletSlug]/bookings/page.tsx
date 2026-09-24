@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+import { BOOKING_NOTES_MAX_LENGTH } from "@/lib/booking-notes";
+
 type Booking = {
   id: string;
   startTime: string;
   endTime: string;
   status: string;
+  notes: string | null;
   customer: { id: string; name: string; phone: string };
   service: { id: string; name: string; durationMin: number; price: number };
   staff: { id: string; name: string } | null;
@@ -66,6 +69,7 @@ export default function BookingsPage() {
     serviceId: "",
     staffId: "",
     time: "10:00",
+    notes: "",
   });
 
   async function loadOptions() {
@@ -119,6 +123,7 @@ export default function BookingsPage() {
         serviceId: form.serviceId,
         staffId: form.staffId || null,
         startTime: `${date}T${form.time}:00`,
+        notes: form.notes,
       }),
     });
     const data = await res.json();
@@ -130,7 +135,13 @@ export default function BookingsPage() {
       return;
     }
 
-    setForm({ customerId: "", serviceId: "", staffId: "", time: "10:00" });
+    setForm({
+      customerId: "",
+      serviceId: "",
+      staffId: "",
+      time: "10:00",
+      notes: "",
+    });
     setShowForm(false);
     await loadBookings(date);
   }
@@ -286,6 +297,19 @@ export default function BookingsPage() {
               className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
             />
           </div>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-ink">
+              Catatan (opsional)
+            </label>
+            <input
+              type="text"
+              maxLength={BOOKING_NOTES_MAX_LENGTH}
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              placeholder="Permintaan khusus untuk kunjungan ini"
+              className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
+            />
+          </div>
           <button
             type="submit"
             disabled={isSubmitting}
@@ -343,6 +367,11 @@ export default function BookingsPage() {
                   </td>
                   <td className="px-4 py-3 text-ink-muted">
                     {booking.service.name}
+                    {booking.notes && (
+                      <span className="mt-1 block max-w-xs whitespace-pre-wrap break-words text-xs text-ink-subtle">
+                        Catatan: {booking.notes}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-ink-muted">
                     {booking.staff?.name ?? "—"}

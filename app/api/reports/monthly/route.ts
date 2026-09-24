@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { requireOutletSession } from "@/lib/api-session";
+import { requireActiveOutletSession } from "@/lib/api-session";
 import {
   endOfJakartaMonth,
   jakartaYearMonthNow,
@@ -13,14 +13,13 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-// Laporan ini cuma ngitung pendapatan dari Transaction yang statusnya
-// "paid" — jadi belum termasuk penjualan paket (CustomerPackage), karena
-// Transaction.bookingId wajib diisi di schema dan pembelian paket nggak
-// selalu nempel ke satu booking tertentu. Kalau nanti mau paket ikut
-// kehitung, perlu ubah skema Transaction dulu (bookingId jadi opsional atau
-// tambah relasi ke CustomerPackage).
+// Laporan ini ngitung semua Transaction yang statusnya "paid", baik yang
+// nempel ke booking (bayar per kunjungan di Kasir) maupun yang nempel ke
+// CustomerPackage (bayar paket di muka waktu dijual di menu Paket).
+// monthTotal = gabungan keduanya; bookingTotal/packageTotal dipecah biar
+// owner bisa lihat kontribusi masing-masing.
 export async function GET(request: Request) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const { searchParams } = new URL(request.url);
@@ -44,12 +43,17 @@ export async function GET(request: Request) {
     where: {
       status: "paid",
       paidAt: { gte: monthStart, lt: monthEnd },
-      booking: { outletId: ctx.outletId },
+      OR: [
+        { booking: { outletId: ctx.outletId } },
+        { customerPackage: { customer: { outletId: ctx.outletId } } },
+      ],
     },
-    select: { amount: true, paidAt: true },
+    select: { amount: true, paidAt: true, customerPackageId: true },
   });
 
   const dayTotals = new Map<string, { total: number; count: number }>();
+  let bookingTotal = 0;
+  let packageTotal = 0;
   for (const tx of transactions) {
     if (!tx.paidAt) continue;
     const key = toJakartaDateString(tx.paidAt);
@@ -57,6 +61,11 @@ export async function GET(request: Request) {
     current.total += tx.amount;
     current.count += 1;
     dayTotals.set(key, current);
+    if (tx.customerPackageId) {
+      packageTotal += tx.amount;
+    } else {
+      bookingTotal += tx.amount;
+    }
   }
 
   const days = Array.from(dayTotals.entries())
@@ -69,6 +78,8 @@ export async function GET(request: Request) {
     month: `${year}-${pad(month)}`,
     monthTotal,
     monthCount: transactions.length,
+    bookingTotal,
+    packageTotal,
     days,
   });
 }

@@ -17,11 +17,11 @@ function BrandLockup({ className = "" }: { className?: string }) {
   return (
     <Link
       href="/"
-      aria-label="Janjianyuk"
+      aria-label="JanjianYuk"
       className={`flex items-center justify-center ${className}`}
     >
-      <span className="font-serif text-[1.75rem] font-semibold italic tracking-[-0.01em] text-ink">
-        Janjianyuk
+      <span className="font-serif text-[2.25rem] font-semibold italic tracking-[-0.02em] text-ink md:text-[3.25rem]">
+    JanjianYuk
       </span>
     </Link>
   );

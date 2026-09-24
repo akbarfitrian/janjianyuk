@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { requireOutletSession } from "@/lib/api-session";
+import { requireActiveOutletSession } from "@/lib/api-session";
 
 async function findOwnedStaff(id: string, outletId: string) {
   const staff = await prisma.staff.findUnique({ where: { id } });
@@ -13,7 +13,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const { id } = await params;
@@ -50,7 +50,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const { id } = await params;

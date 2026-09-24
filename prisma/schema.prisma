@@ -68,6 +68,11 @@ model Outlet {
   breakStartTime String?
   breakEndTime   String?
 
+  // Hari tutup mingguan, pakai nomor hari kalender WIB: 0 = Minggu … 6 = Sabtu
+  // (mis. [5] = tutup tiap Jumat). Tanggal libur khusus (Lebaran, dst) ada di
+  // OutletClosure. Lihat lib/schedule.ts.
+  closedWeekdays Int[] @default([])
+
   createdAt DateTime @default(now())
 
   users         User[]
@@ -76,6 +81,33 @@ model Outlet {
   services      Service[]
   bookings      Booking[]
   subscriptions Subscription[]
+  closures      OutletClosure[]
+}
+
+// Jejak singkat booking publik per outlet & IP (sudah di-hash), dipakai cuma
+// buat batasin spam — lihat lib/booking-abuse.ts. Baris lama dibersihkan
+// otomatis, jadi tabel ini nggak numpuk.
+model PublicBookingEvent {
+  id        String   @id @default(cuid())
+  outletId  String
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@index([outletId, ipHash, createdAt])
+}
+
+// Outlet libur di tanggal tertentu (tanggal merah, Lebaran, renovasi, dll).
+// date = "YYYY-MM-DD" kalender WIB, disimpan sebagai string biar nggak kena
+// urusan timezone — sama kayak jam operasional yang disimpan "HH:mm".
+model OutletClosure {
+  id        String   @id @default(cuid())
+  outletId  String
+  outlet    Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  date      String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([outletId, date])
 }
 
 model Staff {
@@ -89,8 +121,22 @@ model Staff {
   createdAt DateTime @default(now())
 
   bookings Booking[]
+  timeOffs StaffTimeOff[]
 
   @@index([outletId])
+}
+
+// Staff cuti / nggak masuk di tanggal tertentu — di tanggal itu dia nggak
+// ditawarkan di halaman booking publik. date = "YYYY-MM-DD" kalender WIB.
+model StaffTimeOff {
+  id        String   @id @default(cuid())
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date      String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([staffId, date])
 }
 
 model Customer {
@@ -98,13 +144,16 @@ model Customer {
   outletId  String
   outlet    Outlet   @relation(fields: [outletId], references: [id])
   name      String
-  phone     String
+  phone     String // format simpan 628xxxxxxxxxx — normalisasi di lib/phone.ts
   notes     String? // alergi, preferensi, catatan treatment
   createdAt DateTime @default(now())
 
   bookings         Booking[]
   customerPackages CustomerPackage[]
 
+  // Satu no. HP = satu pelanggan per outlet, biar booking publik yang nyari
+  // pelanggan lama lewat no. HP nggak bikin dobel & riwayat nggak terpecah.
+  @@unique([outletId, phone])
   @@index([outletId])
 }
 
@@ -113,8 +162,15 @@ model Service {
   outletId    String
   outlet      Outlet   @relation(fields: [outletId], references: [id])
   name        String
+  category    String? // pengelompokan di daftar admin & halaman booking publik (mis. "Potong", "Warna")
+  description String? // keterangan singkat isi layanan, tampil di halaman booking publik
   durationMin Int
   price       Int
+  priceFrom   Boolean  @default(false) // true = harga ditampilkan "Mulai Rp…", nominal akhir diatur di Kasir
+  // false = disembunyikan dari booking baru (publik & manual), riwayat booking
+  // lama tetap utuh. Layanan yang sudah pernah dipakai nggak bisa dihapus,
+  // jadi ini jalan keluarnya.
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   bookings     Booking[]
@@ -161,6 +217,9 @@ model CustomerPackage {
   purchasedAt  DateTime  @default(now())
   expiresAt    DateTime?
 
+  transactions  Transaction[]
+  sessionUsages PackageSessionUsage[]
+
   @@index([customerId])
   @@index([packageId])
 }
@@ -178,26 +237,61 @@ model Booking {
   startTime  DateTime
   endTime    DateTime
   status     String   @default("pending") // pending, confirmed, completed, cancelled, no_show
+  notes      String? // catatan untuk kunjungan ini (beda dari Customer.notes yang berlaku terus)
   createdAt  DateTime @default(now())
 
-  transactions  Transaction[]
-  notifications NotificationLog[]
+  transactions        Transaction[]
+  notifications       NotificationLog[]
+  packageSessionUsage PackageSessionUsage?
 
   @@index([outletId])
   @@index([staffId, startTime])
 }
 
+// Jejak tiap kali satu sesi CustomerPackage terpakai. Dibuat otomatis lewat
+// dua jalan: (1) staff pilih "Bayar pakai sesi paket" di Kasir buat suatu
+// booking — bookingId keisi, jadi ada jejak sesi ini dipakai buat kunjungan
+// yang mana; atau (2) tombol "Pakai sesi" manual di menu Paket, buat
+// kunjungan yang nggak dicatat sebagai Booking formal — bookingId null.
+// usedSessions di CustomerPackage tetap disimpan sebagai counter cepat
+// (dipakai buat validasi "sisa sesi"), dijaga tetap sinkron sama baris di
+// sini lewat kode API (app/api/customer-packages/[id] &
+// app/api/bookings/[id]/use-package-session), bukan di level schema.
+// Catatan: data usedSessions yang sudah ada SEBELUM tabel ini dibikin
+// nggak akan punya baris pasangannya di sini — itu wajar, bukan bug.
+model PackageSessionUsage {
+  id                String          @id @default(cuid())
+  customerPackageId String
+  customerPackage   CustomerPackage @relation(fields: [customerPackageId], references: [id], onDelete: Cascade)
+  bookingId         String?         @unique
+  booking           Booking?        @relation(fields: [bookingId], references: [id])
+  usedAt            DateTime        @default(now())
+
+  @@index([customerPackageId])
+}
+
+// Satu Transaction adalah SATU catatan uang masuk, dan selalu nempel ke
+// TEPAT SATU sumber: booking (bayar per kunjungan di Kasir) ATAU
+// customerPackage (bayar paket di muka waktu dijual di menu Paket) — nggak
+// pernah dua-duanya, nggak pernah kosong dua-duanya. Konsistensi ini dijaga
+// di kode API (app/api/transactions & app/api/customer-packages), bukan di
+// level schema. onDelete Cascade di customerPackageId sengaja: kalau owner
+// hapus CustomerPackage buat koreksi salah input, catatan pendapatannya ikut
+// kehapus juga (bukan RESTRICT kayak booking, yang emang jarang dihapus).
 model Transaction {
-  id        String    @id @default(cuid())
-  bookingId String
-  booking   Booking   @relation(fields: [bookingId], references: [id])
-  amount    Int
-  method    String // cash, qris, transfer
-  status    String    @default("unpaid") // unpaid, paid
-  paidAt    DateTime?
-  createdAt DateTime  @default(now())
+  id                 String           @id @default(cuid())
+  bookingId          String?
+  booking            Booking?         @relation(fields: [bookingId], references: [id])
+  customerPackageId  String?
+  customerPackage    CustomerPackage? @relation(fields: [customerPackageId], references: [id], onDelete: Cascade)
+  amount             Int
+  method             String // cash, qris, transfer
+  status             String    @default("unpaid") // unpaid, paid
+  paidAt             DateTime?
+  createdAt          DateTime  @default(now())
 
   @@index([bookingId])
+  @@index([customerPackageId])
 }
 
 model Subscription {

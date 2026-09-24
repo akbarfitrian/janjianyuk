@@ -5,6 +5,8 @@
 // nyimpen NotificationLog dengan status "failed" dan booking-nya sendiri
 // tetap sukses dibuat.
 
+import { normalizePhone } from "@/lib/phone";
+
 export interface SendWaMessageParams {
   phone: string; // boleh format 08xxx, +62xxx, atau 62xxx
   message: string;
@@ -17,11 +19,11 @@ export interface SendWaMessageResult {
 }
 
 // Fonnte & Wablas dua-duanya pakai format nomor 62xxxxxxxxxx tanpa "+".
-function normalizePhone(phone: string) {
-  const digits = phone.replace(/[^0-9]/g, "");
-  if (digits.startsWith("62")) return digits;
-  if (digits.startsWith("0")) return `62${digits.slice(1)}`;
-  return digits;
+// Nomor yang lolos normalizePhone (lib/phone.ts) dipakai apa adanya; kalau
+// nggak valid (data lama / nomor luar negeri) jatuh ke digit mentahnya biar
+// perilakunya sama kayak sebelum ada normalisasi.
+function toGatewayTarget(phone: string) {
+  return normalizePhone(phone) ?? phone.replace(/[^0-9]/g, "");
 }
 
 async function sendViaFonnte(
@@ -103,7 +105,7 @@ export async function sendWaMessage({
 }: SendWaMessageParams): Promise<SendWaMessageResult> {
   const provider = process.env.WA_GATEWAY_PROVIDER ?? "fonnte";
   const token = process.env.WA_GATEWAY_TOKEN;
-  const target = normalizePhone(phone);
+  const target = toGatewayTarget(phone);
 
   if (!token) {
     console.warn("[wa-gateway] WA_GATEWAY_TOKEN belum diisi — pesan tidak dikirim");

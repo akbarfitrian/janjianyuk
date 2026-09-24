@@ -9,6 +9,27 @@ type Booking = {
   status: string;
   customer: { id: string; name: string };
   service: { id: string; name: string; price: number };
+  // Ada isinya kalau booking ini "lunas" karena dibayar pakai sesi paket,
+  // bukan tunai/QRIS/transfer.
+  packageSessionUsage: {
+    id: string;
+    customerPackage: { id: string; package: { name: string } };
+  } | null;
+};
+
+// Buat nyaring "paket aktif pelanggan ini yang nyakup layanan booking ini"
+// pas staff mau catat pembayaran di Kasir.
+type CustomerPackageOption = {
+  id: string;
+  usedSessions: number;
+  expiresAt: string | null;
+  customer: { id: string };
+  package: {
+    id: string;
+    name: string;
+    totalSessions: number;
+    items: { service: { id: string } }[];
+  };
 };
 
 type Transaction = {
@@ -17,13 +38,22 @@ type Transaction = {
   method: string;
   status: string;
   createdAt: string;
-  booking: { id: string; customer: { name: string }; service: { name: string } };
+  // Persis salah satu dari dua ini yang keisi: booking (bayar per
+  // kunjungan) atau customerPackage (bayar paket di muka).
+  booking: { id: string; customer: { name: string }; service: { name: string } } | null;
+  customerPackage: {
+    id: string;
+    customer: { name: string };
+    package: { name: string };
+  } | null;
 };
 
 type MonthlyReport = {
   month: string;
   monthTotal: number;
   monthCount: number;
+  bookingTotal: number;
+  packageTotal: number;
   days: { date: string; total: number; count: number }[];
 };
 
@@ -94,6 +124,8 @@ function downloadMonthlyReportCsv(month: string, report: MonthlyReport) {
     `Bulan,${monthLabelOf(month)}`,
     `Total Pendapatan,${report.monthTotal}`,
     `Jumlah Transaksi,${report.monthCount}`,
+    `Dari Booking,${report.bookingTotal}`,
+    `Dari Penjualan Paket,${report.packageTotal}`,
     "",
     "Tanggal,Jumlah Transaksi,Pendapatan",
     ...report.days.map((day) => `${day.date},${day.count},${day.total}`),
@@ -145,6 +177,14 @@ function downloadMonthlyReportPdf(month: string, report: MonthlyReport) {
   doc.text(`Total Pendapatan: ${formatRupiah(report.monthTotal)}`, marginX, y);
   y += 6;
   doc.text(`Jumlah Transaksi: ${report.monthCount}`, marginX, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(
+    `Dari booking: ${formatRupiah(report.bookingTotal)}   ·   Dari penjualan paket: ${formatRupiah(report.packageTotal)}`,
+    marginX,
+    y,
+  );
 
   y += 8;
   doc.setDrawColor(200);
@@ -185,7 +225,7 @@ function downloadMonthlyReportPdf(month: string, report: MonthlyReport) {
   doc.setFontSize(8);
   doc.setTextColor(120);
   const footnote = doc.splitTextToSize(
-    "Laporan ini cuma ngitung transaksi yang nempel ke booking. Penjualan paket dicatat terpisah di menu Paket, belum ikut ke angka di atas.",
+    "Laporan ini gabungan pembayaran booking (dicatat di Kasir) dan penjualan paket (dicatat di menu Paket).",
     pageWidth - marginX * 2,
   );
   doc.text(footnote, marginX, y);
@@ -269,6 +309,12 @@ export default function KasirPage() {
   const [payError, setPayError] = useState<string | null>(null);
   const [isSubmittingPay, setIsSubmittingPay] = useState(false);
 
+  // Nggak date-scoped kayak bookings/transactions — paket pelanggan tetap
+  // "aktif" lepas dari tanggal yang lagi dilihat di Kasir.
+  const [customerPackages, setCustomerPackages] = useState<CustomerPackageOption[]>([]);
+  const [packagePayBusyId, setPackagePayBusyId] = useState<string | null>(null);
+  const [packagePayError, setPackagePayError] = useState<string | null>(null);
+
   const [month, setMonth] = useState(thisMonthStr());
   const [report, setReport] = useState<MonthlyReport | null>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(true);
@@ -288,6 +334,12 @@ export default function KasirPage() {
     setIsLoading(false);
   }
 
+  async function loadCustomerPackages() {
+    const res = await fetch("/api/customer-packages");
+    const data = await res.json();
+    setCustomerPackages(data.customerPackages ?? []);
+  }
+
   async function loadReport(forMonth: string) {
     setIsLoadingReport(true);
     const res = await fetch(`/api/reports/monthly?month=${forMonth}`);
@@ -301,18 +353,75 @@ export default function KasirPage() {
   }, [date]);
 
   useEffect(() => {
+    loadCustomerPackages();
+  }, []);
+
+  useEffect(() => {
     loadReport(month);
   }, [month]);
+
+  // Paket aktif milik pelanggan ini, yang nyakup layanan di booking ini,
+  // dan sisa sesinya masih ada. Ini yang nentuin apa opsi "bayar pakai
+  // paket" muncul pas staff buka form catat pembayaran.
+  function eligiblePackagesFor(booking: Booking) {
+    const now = Date.now();
+    return customerPackages.filter((cp) => {
+      if (cp.customer.id !== booking.customer.id) return false;
+      if (cp.expiresAt && new Date(cp.expiresAt).getTime() < now) return false;
+      if (cp.usedSessions >= cp.package.totalSessions) return false;
+      return cp.package.items.some((item) => item.service.id === booking.service.id);
+    });
+  }
 
   function openPayForm(booking: Booking) {
     setPayingBookingId(booking.id);
     setPayForm({ amount: String(booking.service.price), method: "cash" });
     setPayError(null);
+    setPackagePayError(null);
   }
 
   function closePayForm() {
     setPayingBookingId(null);
     setPayError(null);
+    setPackagePayError(null);
+  }
+
+  async function handleUsePackageSession(bookingId: string, customerPackageId: string) {
+    setPackagePayBusyId(customerPackageId);
+    setPackagePayError(null);
+
+    const res = await fetch(`/api/bookings/${bookingId}/use-package-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerPackageId }),
+    });
+    const data = await res.json();
+
+    setPackagePayBusyId(null);
+
+    if (!res.ok) {
+      setPackagePayError(data.error ?? "Gagal pakai sesi paket.");
+      return;
+    }
+
+    setPayingBookingId(null);
+    await Promise.all([loadDay(date), loadCustomerPackages(), loadReport(month)]);
+  }
+
+  async function handleUndoPackageSession(bookingId: string) {
+    setPackagePayBusyId(bookingId);
+    const res = await fetch(`/api/bookings/${bookingId}/use-package-session`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    setPackagePayBusyId(null);
+
+    if (!res.ok) {
+      window.alert(data.error ?? "Gagal batalin pemakaian sesi paket.");
+      return;
+    }
+
+    await Promise.all([loadDay(date), loadCustomerPackages(), loadReport(month)]);
   }
 
   async function handlePaySubmit(e: React.FormEvent) {
@@ -345,21 +454,28 @@ export default function KasirPage() {
 
   const paidTotalsByBooking = new Map<string, number>();
   for (const tx of transactions) {
-    if (tx.status !== "paid") continue;
+    if (tx.status !== "paid" || !tx.booking) continue;
     paidTotalsByBooking.set(
       tx.booking.id,
       (paidTotalsByBooking.get(tx.booking.id) ?? 0) + tx.amount,
     );
   }
+  // dayTotal sengaja ngitung SEMUA transaksi lunas di tanggal ini, baik dari
+  // pembayaran booking maupun dari penjualan paket — bukan cuma yang
+  // nempel ke booking yang tampil di tabel bawah.
   const dayTotal = transactions
     .filter((tx) => tx.status === "paid")
     .reduce((sum, tx) => sum + tx.amount, 0);
+  const packageSalesToday = transactions.filter(
+    (tx) => tx.status === "paid" && tx.customerPackage,
+  );
 
   return (
     <div>
       <h1 className="text-xl font-semibold text-ink">Kasir</h1>
       <p className="mt-1 text-sm text-ink-subtle">
-        Catat pembayaran booking di sini pas pelanggan bayar di tempat.
+        Catat pembayaran booking di sini pas pelanggan bayar di tempat — atau
+        pakai sesi paket kalau pelanggan udah beli paket duluan.
       </p>
 
       <div className="mt-6 flex items-center gap-3">
@@ -405,7 +521,9 @@ export default function KasirPage() {
             ) : (
               bookings.map((booking) => {
                 const paid = paidTotalsByBooking.get(booking.id) ?? 0;
-                const isPaid = paid > 0;
+                const paidViaPackage = booking.packageSessionUsage;
+                const isPaid = paid > 0 || !!paidViaPackage;
+                const eligiblePackages = eligiblePackagesFor(booking);
                 return (
                   <Fragment key={booking.id}>
                     <tr>
@@ -422,7 +540,11 @@ export default function KasirPage() {
                         {formatRupiah(booking.service.price)}
                       </td>
                       <td className="px-4 py-3">
-                        {isPaid ? (
+                        {paidViaPackage ? (
+                          <span className="rounded-full bg-ok-soft px-2 py-1 text-xs font-medium text-ok">
+                            Lunas (paket) · {paidViaPackage.customerPackage.package.name}
+                          </span>
+                        ) : isPaid ? (
                           <span className="rounded-full bg-ok-soft px-2 py-1 text-xs font-medium text-ok">
                             Lunas · {formatRupiah(paid)}
                           </span>
@@ -433,17 +555,68 @@ export default function KasirPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => openPayForm(booking)}
-                          className="text-ink-muted underline underline-offset-4 hover:text-ink"
-                        >
-                          {isPaid ? "Catat lagi" : "Catat pembayaran"}
-                        </button>
+                        {paidViaPackage ? (
+                          <button
+                            onClick={() => handleUndoPackageSession(booking.id)}
+                            disabled={packagePayBusyId === booking.id}
+                            className="text-ink-muted underline underline-offset-4 hover:text-ink disabled:opacity-50"
+                          >
+                            Batal (paket)
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => openPayForm(booking)}
+                            className="text-ink-muted underline underline-offset-4 hover:text-ink"
+                          >
+                            {isPaid ? "Catat lagi" : "Catat pembayaran"}
+                          </button>
+                        )}
                       </td>
                     </tr>
                     {payingBookingId === booking.id && (
                       <tr>
                         <td colSpan={6} className="bg-surface-2 px-4 py-4">
+                          {eligiblePackages.length > 0 && (
+                            <div className="mb-4 rounded-md border border-line-strong bg-surface p-3">
+                              <p className="text-sm font-medium text-ink">
+                                {booking.customer.name} punya paket aktif buat layanan ini:
+                              </p>
+                              <ul className="mt-2 space-y-2">
+                                {eligiblePackages.map((cp) => {
+                                  const sisa = cp.package.totalSessions - cp.usedSessions;
+                                  return (
+                                    <li
+                                      key={cp.id}
+                                      className="flex flex-wrap items-center justify-between gap-2"
+                                    >
+                                      <span className="text-sm text-ink-muted">
+                                        {cp.package.name} — sisa {sisa} sesi
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUsePackageSession(booking.id, cp.id)}
+                                        disabled={packagePayBusyId === cp.id}
+                                        className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent hover:bg-accent-hover disabled:opacity-50"
+                                      >
+                                        {packagePayBusyId === cp.id ? "Memproses..." : "Pakai sesi ini"}
+                                      </button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                              {packagePayError && (
+                                <p className="mt-2 text-sm text-danger">{packagePayError}</p>
+                              )}
+                              <p className="mt-2 text-xs text-ink-faint">
+                                Nggak nyatet pembayaran baru — cuma nandain sesi paket ini kepakai buat kunjungan ini.
+                              </p>
+                            </div>
+                          )}
+                          {eligiblePackages.length > 0 && (
+                            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-faint">
+                              Atau catat pembayaran manual
+                            </p>
+                          )}
                           <form
                             onSubmit={handlePaySubmit}
                             className="flex flex-wrap items-end gap-3"
@@ -520,6 +693,50 @@ export default function KasirPage() {
         </table>
       </div>
 
+      {/* --- Penjualan paket hari ini --- */}
+      {packageSalesToday.length > 0 && (
+        <>
+          <h2 className="mt-10 text-sm font-semibold text-ink">
+            Penjualan paket hari ini
+          </h2>
+          <div className="mt-3 overflow-x-auto rounded-lg border border-line">
+            <table className="w-full text-sm">
+              <thead className="bg-surface-2 text-left text-ink-subtle">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Jam</th>
+                  <th className="px-4 py-2 font-medium">Pelanggan</th>
+                  <th className="px-4 py-2 font-medium">Paket</th>
+                  <th className="px-4 py-2 font-medium">Metode</th>
+                  <th className="px-4 py-2 font-medium">Jumlah</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {packageSalesToday.map((tx) => (
+                  <tr key={tx.id}>
+                    <td className="px-4 py-3 text-ink">{formatTime(tx.createdAt)}</td>
+                    <td className="px-4 py-3 text-ink">
+                      {tx.customerPackage?.customer.name}
+                    </td>
+                    <td className="px-4 py-3 text-ink-muted">
+                      {tx.customerPackage?.package.name}
+                    </td>
+                    <td className="px-4 py-3 text-ink-muted">
+                      {METHOD_LABEL[tx.method] ?? tx.method}
+                    </td>
+                    <td className="px-4 py-3 text-ink-muted">
+                      {formatRupiah(tx.amount)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-ink-faint">
+            Sudah ikut kehitung di &quot;Total masuk hari ini&quot; di atas dan di laporan bulanan di bawah.
+          </p>
+        </>
+      )}
+
       {/* --- Laporan bulanan --- */}
       <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-ink">
@@ -540,7 +757,7 @@ export default function KasirPage() {
         <p className="mt-3 text-sm text-ink-faint">Memuat laporan...</p>
       ) : (
         <>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-line p-5">
               <p className="text-sm text-ink-subtle">Total pendapatan bulan ini</p>
               <p className="mt-2 text-2xl font-semibold text-ink">
@@ -551,6 +768,18 @@ export default function KasirPage() {
               <p className="text-sm text-ink-subtle">Jumlah transaksi</p>
               <p className="mt-2 text-2xl font-semibold text-ink">
                 {report?.monthCount ?? 0}
+              </p>
+            </div>
+            <div className="rounded-lg border border-line p-5">
+              <p className="text-sm text-ink-subtle">Dari booking</p>
+              <p className="mt-2 text-2xl font-semibold text-ink">
+                {formatRupiah(report?.bookingTotal ?? 0)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-line p-5">
+              <p className="text-sm text-ink-subtle">Dari penjualan paket</p>
+              <p className="mt-2 text-2xl font-semibold text-ink">
+                {formatRupiah(report?.packageTotal ?? 0)}
               </p>
             </div>
           </div>
@@ -591,8 +820,9 @@ export default function KasirPage() {
       )}
 
       <p className="mt-3 text-xs text-ink-faint">
-        Laporan ini cuma ngitung transaksi yang nempel ke booking. Penjualan
-        paket dicatat terpisah di menu Paket, belum ikut ke angka di atas.
+        Laporan ini gabungan pembayaran booking (dicatat di Kasir) dan
+        penjualan paket (dicatat di menu Paket) — keduanya otomatis kehitung
+        begitu tercatat lunas.
       </p>
     </div>
   );

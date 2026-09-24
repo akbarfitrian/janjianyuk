@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { requireOutletSession } from "@/lib/api-session";
+import { requireActiveOutletSession } from "@/lib/api-session";
 import { endOfJakartaDay, startOfJakartaDay } from "@/lib/tz";
 
 const transactionInclude = {
@@ -13,12 +13,20 @@ const transactionInclude = {
       service: { select: { id: true, name: true, price: true } },
     },
   },
+  customerPackage: {
+    select: {
+      id: true,
+      customer: { select: { id: true, name: true } },
+      package: { select: { id: true, name: true } },
+    },
+  },
 } as const;
 
 // Transaction nggak punya kolom outletId langsung — scope-nya lewat relasi
-// booking.outletId.
+// booking.outletId ATAU customerPackage.customer.outletId, tergantung ini
+// transaksi dari pembayaran booking atau dari penjualan paket.
 export async function GET(request: Request) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const { searchParams } = new URL(request.url);
@@ -35,7 +43,10 @@ export async function GET(request: Request) {
 
   const transactions = await prisma.transaction.findMany({
     where: {
-      booking: { outletId: ctx.outletId },
+      OR: [
+        { booking: { outletId: ctx.outletId } },
+        { customerPackage: { customer: { outletId: ctx.outletId } } },
+      ],
       ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
     },
     include: transactionInclude,
@@ -49,7 +60,7 @@ export async function GET(request: Request) {
 // alur invoice/pending payment terpisah). Cukup buat kebutuhan MVP: admin
 // nyatet pembayaran yang sudah beneran diterima di kasir.
 export async function POST(request: Request) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const body = await request.json();

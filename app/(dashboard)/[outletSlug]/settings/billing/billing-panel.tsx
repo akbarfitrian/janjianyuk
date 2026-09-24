@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { PLAN_STATUS_LABEL } from "@/lib/plan";
+
 function formatRupiah(value: number) {
   return `Rp${value.toLocaleString("id-ID")}`;
 }
@@ -13,13 +15,6 @@ function formatTanggal(iso: string) {
     year: "numeric",
   });
 }
-
-const PLAN_STATUS_LABEL: Record<string, string> = {
-  trial: "Trial",
-  active: "Aktif",
-  past_due: "Nunggak",
-  cancelled: "Dibatalkan",
-};
 
 const SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
   pending: "Menunggu pembayaran",
@@ -87,7 +82,7 @@ export function BillingPanel({
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-ink">Billing</h1>
+      <h1 className="text-xl font-semibold text-ink">Tagihan</h1>
 
       {finishStatus === "finish" && (
         <p className="mt-4 rounded-md border border-info-line bg-info-soft px-4 py-3 text-sm text-info">

@@ -39,8 +39,8 @@ export default async function DashboardLayout({
   const { access, daysLeft } = getEffectiveAccess(outlet);
   const lockReason =
     outlet.planStatus === "past_due"
-      ? "Pembayaran perpanjangan gagal. Upgrade lagi lewat Billing buat lanjut pakai fitur ini."
-      : "Trial kamu udah habis. Upgrade ke Pro lewat Billing buat lanjut pakai fitur ini.";
+      ? "Pembayaran perpanjangan gagal. Upgrade lagi lewat Tagihan buat lanjut pakai fitur ini."
+      : "Trial kamu udah habis. Upgrade ke Pro lewat Tagihan buat lanjut pakai fitur ini.";
 
   return (
     <div className="flex min-h-screen flex-1 flex-col md:flex-row">

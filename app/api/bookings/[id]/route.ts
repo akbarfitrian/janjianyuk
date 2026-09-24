@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { requireOutletSession } from "@/lib/api-session";
+import { requireActiveOutletSession } from "@/lib/api-session";
+import { isForeignKeyViolation } from "@/lib/db-errors";
 
 const VALID_STATUSES = [
   "pending",
@@ -21,7 +22,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const { id } = await params;
@@ -56,7 +57,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const ctx = await requireOutletSession();
+  const ctx = await requireActiveOutletSession();
   if ("error" in ctx) return ctx.error;
 
   const { id } = await params;
@@ -68,7 +69,45 @@ export async function DELETE(
     );
   }
 
-  await prisma.booking.delete({ where: { id } });
+  // Booking yang sudah punya catatan uang masuk (bayar tunai/QRIS/transfer di
+  // Kasir, atau bayar pakai sesi paket) sengaja DIBLOK, bukan ikut kehapus —
+  // beda dari NotificationLog di bawah yang cuma log kirim WA, nggak
+  // menyangkut uang sama sekali.
+  const [paidTransaction, packageUsage] = await Promise.all([
+    prisma.transaction.findFirst({ where: { bookingId: id, status: "paid" } }),
+    prisma.packageSessionUsage.findUnique({ where: { bookingId: id } }),
+  ]);
+  if (paidTransaction || packageUsage) {
+    return NextResponse.json(
+      {
+        error:
+          "Booking ini sudah ada catatan pembayaran, tidak bisa dihapus. Batalkan pembayarannya dulu di menu Kasir kalau memang perlu.",
+      },
+      { status: 409 },
+    );
+  }
+
+  // NotificationLog nunjuk wajib ke Booking (FK RESTRICT) — hampir semua
+  // booking punya baris ini (konfirmasi WA pas dibuat, atau reminder H-1 dari
+  // cron), jadi harus dibersihin dulu di transaction yang sama, bukan
+  // dibiarin bikin delete di bawah gagal mentah-mentah.
+  try {
+    await prisma.$transaction([
+      prisma.notificationLog.deleteMany({ where: { bookingId: id } }),
+      prisma.booking.delete({ where: { id } }),
+    ]);
+  } catch (err) {
+    // Jaring pengaman kalau ada relasi baru ke Booking yang belum dicek di
+    // atas, atau ada transaksi/pemakaian sesi baru nyelip di antara
+    // pengecekan dan hapus.
+    if (isForeignKeyViolation(err)) {
+      return NextResponse.json(
+        { error: "Booking ini masih dipakai data lain, tidak bisa dihapus." },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 
   return NextResponse.json({ ok: true });
 }

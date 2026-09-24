@@ -17,6 +17,24 @@ export function isPlanName(value: string): value is PlanName {
   return value in PLANS;
 }
 
+// Label status paket buat ditampilin ke user (sidebar, halaman Tagihan,
+// dst) — nilai di database tetap bahasa Inggris (trial, active, ...).
+export const PLAN_STATUS_LABEL: Record<string, string> = {
+  trial: "Trial",
+  active: "Aktif",
+  past_due: "Nunggak",
+  cancelled: "Dibatalkan",
+};
+
+/** Satu baris ringkas status paket, mis. "Paket Pro · Aktif" / "Masa trial". */
+export function formatPlanLine(planName: string, planStatus: string): string {
+  if (planStatus === "trial") return "Masa trial";
+  const label = isPlanName(planName)
+    ? PLANS[planName].label
+    : planName.charAt(0).toUpperCase() + planName.slice(1);
+  return `Paket ${label} · ${PLAN_STATUS_LABEL[planStatus] ?? planStatus}`;
+}
+
 export interface OutletPlanInfo {
   planStatus: string; // trial, active, past_due, cancelled
   trialEndsAt: Date | null;

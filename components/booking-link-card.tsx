@@ -19,8 +19,8 @@ export function BookingLinkCard({ bookingUrl }: { bookingUrl: string }) {
 
   return (
     <div className="mt-4 rounded-lg border border-line p-5">
-      <p className="text-sm text-ink-subtle">Link booking untuk pelanggan</p>
-      <p className="mt-1 text-xs text-ink-faint">
+      <p className="text-sm font-medium text-ink">Link booking untuk pelanggan</p>
+      <p className="mt-1 text-xs text-ink-subtle">
         Tempel link ini di bio Instagram, status WhatsApp, atau kirim
         langsung ke pelanggan biar mereka bisa booking sendiri.
       </p>

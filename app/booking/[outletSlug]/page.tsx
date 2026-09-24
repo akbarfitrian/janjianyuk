@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { formatHoursLabel } from "@/lib/business-hours";
+import { getEffectiveAccess } from "@/lib/plan";
+import { formatClosedDaysLabel } from "@/lib/schedule";
 import { PublicBookingForm } from "./booking-form";
 
 export default async function PublicBookingPage({
@@ -19,9 +21,21 @@ export default async function PublicBookingPage({
       closeTime: true,
       breakStartTime: true,
       breakEndTime: true,
+      closedWeekdays: true,
+      planStatus: true,
+      trialEndsAt: true,
       services: {
-        orderBy: { createdAt: "desc" },
-        select: { id: true, name: true, durationMin: true, price: true },
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          description: true,
+          durationMin: true,
+          price: true,
+          priceFrom: true,
+        },
       },
       staff: {
         orderBy: { createdAt: "desc" },
@@ -33,6 +47,13 @@ export default async function PublicBookingPage({
   if (!outlet) {
     notFound();
   }
+
+  const closedDays = formatClosedDaysLabel(outlet.closedWeekdays);
+  // Sama kayak gate di dashboard (lib/plan.ts) — outlet yang trial-nya
+  // habis/nunggak/dibatalin nggak boleh tetap nerima booking baru dari
+  // publik. Dicek di sini juga (bukan cuma di POST /api/public/.../bookings)
+  // biar pelanggan nggak isi form dulu baru ditolak pas submit.
+  const locked = getEffectiveAccess(outlet).access === "locked";
 
   return (
     <main className="flex-1 px-6 py-12">
@@ -46,9 +67,15 @@ export default async function PublicBookingPage({
         </p>
         <p className="mt-1 text-sm text-ink-subtle">
           Jam operasional: {formatHoursLabel(outlet)}
+          {closedDays && <> · Tutup setiap {closedDays}</>}
         </p>
 
-        {outlet.services.length === 0 ? (
+        {locked ? (
+          <p className="mt-8 rounded-lg border border-dashed border-line-strong p-6 text-center text-sm text-ink-subtle">
+            {outlet.name} lagi nggak bisa nerima booking online. Coba hubungi
+            outlet langsung ya.
+          </p>
+        ) : outlet.services.length === 0 ? (
           <p className="mt-8 rounded-lg border border-dashed border-line-strong p-6 text-center text-sm text-ink-subtle">
             {outlet.name} belum punya layanan yang bisa dibooking online.
           </p>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { normalizePhone } from "@/lib/phone";
+
 type Service = { id: string; name: string; durationMin: number; price: number };
 type Customer = { id: string; name: string; phone: string };
 
@@ -44,7 +46,30 @@ const emptyPackageForm: PackageForm = {
   totalSessions: "",
   price: "",
 };
-const emptySellForm = { customerId: "", packageId: "", expiresAt: "" };
+const emptySellForm = {
+  customerId: "",
+  packageId: "",
+  expiresAt: "",
+  amount: "",
+  method: "cash",
+};
+
+const METHOD_LABEL: Record<string, string> = {
+  cash: "Tunai",
+  qris: "QRIS",
+  transfer: "Transfer",
+};
+
+// "628..." dari "08..." / "+62..." biar link wa.me valid. Data lama yang
+// nggak lolos normalisasi jatuh ke digit mentahnya.
+function waNumber(phone: string) {
+  return normalizePhone(phone) ?? phone.replace(/[^0-9]/g, "");
+}
+
+function daysUntil(iso: string) {
+  const ms = new Date(iso).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
+  return Math.round(ms / (1000 * 60 * 60 * 24));
+}
 
 function formatRupiah(value: number) {
   return `Rp${value.toLocaleString("id-ID")}`;
@@ -193,6 +218,10 @@ export default function PackagesPage() {
       setSellError("Pelanggan dan paket wajib dipilih.");
       return;
     }
+    if (sellForm.amount === "" || Number(sellForm.amount) < 0) {
+      setSellError("Jumlah bayar wajib diisi.");
+      return;
+    }
 
     setIsSubmittingSell(true);
 
@@ -203,6 +232,8 @@ export default function PackagesPage() {
         customerId: sellForm.customerId,
         packageId: sellForm.packageId,
         expiresAt: sellForm.expiresAt || null,
+        amount: Number(sellForm.amount),
+        method: sellForm.method,
       }),
     });
     const data = await res.json();
@@ -230,6 +261,25 @@ export default function PackagesPage() {
       const data = await res.json();
       alert(data.error ?? "Gagal update sesi.");
     }
+  }
+
+  // Paket yang kedaluwarsanya ≤7 hari lagi dan sisa sesinya masih ada —
+  // ini duit pelanggan yang bakal hangus kalau nggak diingetin buat balik.
+  const expiringSoon = customerPackages
+    .filter((cp) => {
+      if (!cp.expiresAt) return false;
+      const left = daysUntil(cp.expiresAt);
+      const hasSessionsLeft = cp.usedSessions < cp.package.totalSessions;
+      return left >= 0 && left <= 7 && hasSessionsLeft;
+    })
+    .sort((a, b) => daysUntil(a.expiresAt!) - daysUntil(b.expiresAt!));
+
+  function waReminderLink(cp: CustomerPackage) {
+    const sisa = cp.package.totalSessions - cp.usedSessions;
+    const text = `Halo ${cp.customer.name}, mau ingetin aja nih — sisa ${sisa} sesi paket "${cp.package.name}" kamu bakal kedaluwarsa ${formatTanggal(
+      cp.expiresAt!,
+    )}. Yuk dijadwalin sebelum keburu hangus ya 🙏`;
+    return `https://wa.me/${waNumber(cp.customer.phone)}?text=${encodeURIComponent(text)}`;
   }
 
   async function handleCustomerPackageDelete(id: string) {
@@ -457,15 +507,56 @@ export default function PackagesPage() {
           <select
             required
             value={sellForm.packageId}
-            onChange={(e) =>
-              setSellForm((f) => ({ ...f, packageId: e.target.value }))
-            }
+            onChange={(e) => {
+              const packageId = e.target.value;
+              const picked = packages.find((p) => p.id === packageId);
+              setSellForm((f) => ({
+                ...f,
+                packageId,
+                // Auto-isi sesuai harga paket, tapi tetap bisa diedit kalau
+                // owner mau kasih promo/diskon ke pelanggan ini.
+                amount: picked ? String(picked.price) : f.amount,
+              }));
+            }}
             className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
           >
             <option value="">Pilih paket</option>
             {packages.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.totalSessions}x — {formatRupiah(p.price)})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-36">
+          <label className="block text-sm font-medium text-ink">
+            Jumlah bayar (Rp)
+          </label>
+          <input
+            required
+            type="number"
+            min={0}
+            value={sellForm.amount}
+            onChange={(e) =>
+              setSellForm((f) => ({ ...f, amount: e.target.value }))
+            }
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
+          />
+        </div>
+        <div className="w-36">
+          <label className="block text-sm font-medium text-ink">
+            Metode bayar
+          </label>
+          <select
+            value={sellForm.method}
+            onChange={(e) =>
+              setSellForm((f) => ({ ...f, method: e.target.value }))
+            }
+            className="mt-1 w-full rounded-md border border-line-strong px-3 py-2 text-sm focus:border-azure focus:outline-none"
+          >
+            {Object.entries(METHOD_LABEL).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
@@ -499,10 +590,45 @@ export default function PackagesPage() {
       </form>
       {sellError && <p className="mt-2 text-sm text-danger">{sellError}</p>}
       <p className="mt-2 text-xs text-ink-faint">
-        Catatan: penjualan paket belum otomatis tercatat di laporan pendapatan
-        kasir — kalau pelanggan bayar tunai/QRIS/transfer buat beli paket,
-        catat juga pembayarannya lewat menu Kasir biar kehitung.
+        Begitu paket ini dijual, pembayarannya langsung tercatat lunas dan
+        otomatis kehitung di total kasir & laporan pendapatan bulanan —
+        nggak perlu dicatat ulang manual.
       </p>
+
+      {expiringSoon.length > 0 && (
+        <div className="mt-4 rounded-lg border border-warn-line bg-warn-soft p-4">
+          <p className="text-sm font-medium text-warn">
+            {expiringSoon.length} paket pelanggan mau kedaluwarsa dalam 7 hari —
+            sisa sesinya masih ada, sayang kalau hangus.
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {expiringSoon.map((cp) => {
+              const sisa = cp.package.totalSessions - cp.usedSessions;
+              const left = daysUntil(cp.expiresAt!);
+              return (
+                <li
+                  key={cp.id}
+                  className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink"
+                >
+                  <span>
+                    <span className="font-medium">{cp.customer.name}</span> —{" "}
+                    {cp.package.name} (sisa {sisa} sesi) ·{" "}
+                    {left === 0 ? "kedaluwarsa hari ini" : `${left} hari lagi`}
+                  </span>
+                  <a
+                    href={waReminderLink(cp)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="whitespace-nowrap rounded-md border border-line-strong bg-surface px-2.5 py-1 text-xs font-medium text-ink-muted hover:bg-surface-2"
+                  >
+                    Ingatkan via WhatsApp
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-sm">
@@ -567,6 +693,13 @@ export default function PackagesPage() {
                       {!isExpired && isFull && (
                         <span className="ml-2 rounded-full bg-line px-2 py-0.5 text-xs text-ink-muted">
                           Habis
+                        </span>
+                      )}
+                      {!isExpired && !isFull && cp.expiresAt && daysUntil(cp.expiresAt) <= 7 && (
+                        <span className="ml-2 rounded-full bg-warn-soft px-2 py-0.5 text-xs text-warn">
+                          {daysUntil(cp.expiresAt) === 0
+                            ? "H-0"
+                            : `H-${daysUntil(cp.expiresAt)}`}
                         </span>
                       )}
                     </td>
